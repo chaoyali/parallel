@@ -14,19 +14,19 @@
 <p>There are several common parallelization methods in android programming, including
 - Using class Thread, which allows running tasks in a separate thread;
 - Using class AsyncTask, which allows running tasks in a separate thread, too.
-
+<br><br>
 However, all of these method only make use of multithreads but not take advantage of the lower level SIMD. As far as we know, there are no tool/library that can be used in developing android apps to access SIMD in arm processor.
-
+<br><br>
 In C/C++ world, NEON provides a set of scalar/vector instructions and registers (shared with the FPU) comparable to MMX/SSE/3DNow! in the x86 world. However, android developer must make use of the Native Development Kit (NDK) to embed components that make use of C/C++ code in their Android applications. We want to develop a java library (including the high level wrapper of scalar/vector instructions and several useful functions) for general android developer so that they can take advantage of SIMD mechanism in arm processor without writing C/C++ code.</p>
 
 <h3>
 <a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span class="octicon octicon-link"></span></a>The Challenge</h3>
 <p>The first challenge is to get familiar with Android platform and build a stable platform for us to call the functions written in C/C++ code. It is hard for us because we do not know much about Android programming with C/C++. The platform also depend on the model of core. We think this part may need about 3 days work to fully understand the platform.
-
+<br><br>
 Then we need to choose and learn some basic algorithms (general propose algorithms as well as image processing algorithms) and use NEON to implement these basic functions for Android platform. In this part, we need to implement parallel algorithms in SIMD and wrap them and create java interface. Only part of algorithms can be writen in SIMD so we will try to discover some. This is the main part of our project. The workload of this part depends on the algorithms we choose. We should arrange about two weeks on this part.
-
+<br><br>
 After that, we need to pack the interface into library for other android user to use. We did not have experience in this area so it is hard for us evaluate its workload. We hope that we can finish this part in 4-6 days.
-
+<br><br>
 Finally, we should optimize our implementation (eg, improve its robustness for different platform), write some sample code using these API and verified its correctness as well as effiency. This may cause about 4-6 days.</p>
 
 <h3>
@@ -37,11 +37,29 @@ Finally, we should optimize our implementation (eg, improve its robustness for d
 </p>
 
 <h3>
+<a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span class="octicon octicon-link"></span></a>Goals and Deliverable</h3>
+<p>
+PLAN TO ACHIEVE: We plan to develop an some parallel algorithms, such as scanning, sorting, fft and so on. Then we should wrap them as API provided for at least one special machine. The performance provided by these API should outperform the serials and even the multi process version of code.
+<br><br>
+EXTRA GOALS: Explore more algorithms or implement some parallel data structure. Improve our codes' robustness for different hardware. Keep improve its performance and find which implementation is better.
+<br><br>
+OTHERS: We will implement an android application using our API and without our API. We hope our API will be convenient for use and perform well.
+</p>
+
+<h3>
 <a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span class="octicon octicon-link"></span></a>Schedule</h3>
 
-<p>
-  Produce a schedule for your project. Your schedule should have at least one item to do per week. List what you plan to get done each week from now until the parallelism competition in order to meet your project goals. Keep in mind that due to other classes, you'll have more time to work some weeks than others (work that into the schedule). You will need to re-evaluate your progress at the end of each week and update this schedule accordingly. Note the intermediate checkpoint deadline is April 16th. In your schedule we encourage you to be precise as precise as possible. It's often helpful to work backward in time from your deliverables and goals, writing down all the little things you'll need to do (establish the dependencies!).
-</p>
+<p>4.4 - 4.6 : Setup developing environment, including android studio, android ndk
+<br>
+4.7 - 4.10 : Wrap the basic operation of neon for android
+<br>
+4.11 - 4.19 : Choose and implement some basic parallel in SIMD
+<br>
+4.25 - 5.1 : Write the sample code and analysis the performance
+<br>
+5.1 - 5.5 : Improve the performance of our implementation
+<br>
+5.6 - 5.7 : Write report and finish our project </p>
 
 <h3>
 <a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span class="octicon octicon-link"></span></a>Platform Choice</h3>
@@ -53,10 +71,18 @@ Finally, we should optimize our implementation (eg, improve its robustness for d
 <h3>
 <a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span class="octicon octicon-link"></span></a>References<a name="ref"></a></h3>
 <ol type="1">
-<li>ARM NEON Optimization. An Example: http://hilbert-space.de/?p=22</li>
-<li>NEON Support: http://developer.android.com/ndk/guides/cpu-arm-neon.html</li>
-<li>Boost Performance for Your Android Native Code :  http://www.drdobbs.com/mobile/boost-performance-for-your-android-nativ/232300954</li>
-<li>Developing Android* Applications Using Parallel Programming :  https://software.intel.com/en-us/articles/developing-android-applications-using-parallel-programming</li>
+<li>
+  <a target="_blank" href="http://developer.android.com/ndk/guides/cpu-arm-neon.html">NEON Support</a>
+</li>
+<li>
+  <a target="_blank" href="http://hilbert-space.de/?p=22">ARM NEON Optimization. An Example</a>
+</li>
+<li>
+  <a target="_blank" href="http://www.drdobbs.com/mobile/boost-performance-for-your-android-nativ/232300954">Boost Performance for Your Android Native Code</a>
+</li>
+<li>
+  <a target="_blank" href="https://software.intel.com/en-us/articles/developing-android-applications-using-parallel-programming">Developing Android Applications Using Parallel Programming</a>
+</li>
 </ol>
 
       <footer class="site-footer">
