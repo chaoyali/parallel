@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="/Users/xgzhu/AndroidStudioProjects/hello-neon/app/build/intermediates/exploded-aar/hello-neon/myneonlibrary/unspecified/jars/classes.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="c5c4c1a88795b33c23c92f0d25b47e34fd413c71">
+        <dex dex="/Users/xgzhu/AndroidStudioProjects/hello-neon/app/build/intermediates/pre-dexed/debug/hello-neon-myneonlibrary-unspecified_02f0d197de29b5fb264d4289dbf49d022d8db01d.jar" />
+    </item>
+
+</items>
