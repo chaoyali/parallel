@@ -31,10 +31,18 @@
 <h3>Foresee</h3>
 <ul style="list-style: none;">
   <p>
-  At first we want to develop a completed and useful parallel api for android developer. However, we then realize it is hard to develop a general / special purpose library because we do not have enough  experience on special domain and the most of general purpose do not need neon to speed them up (such as database). 
-  There are some limitation in smart phone: limited energy and bad computation ability
-  As a result, we want to choose some useful algorithms to implement, the algorithms include sort algorithms, matrix algorithm, scan algorithm and FFT algorithms. Because of these algorithm is frequently used in most of area and can be efficiently implemented in android smart phone.
-  </p>
+    <li>Here we want to implement two relative completed and useful parallel library: NeonCollection and NeonMatrix.</li>
+    <li>NeonCollection is a general purpose paralle library including some common but faster algorithms for vector, 
+    including sorting, scanning, and fast Fourier transform. Besides, this collection also include window filter (convolution) 
+    so that we can use this library to blur a picture and so on.</li>
+    <li>NeonMatrix is a special purpose parallel library for matrix manipulation. Although this is a very mature technology and 
+    can hardly be exceed, we want to explore the benefit that neon (SIMD) can bring for CPU processing. What's more, it is 
+    relative useful in Andoird development. We want to use this library to do the same function (convolutoin) as NeonCollection
+    and compare the difference between them.</li>
+    <li>Finally, there are some limitation in smart phone: limited energy and bad computation ability. So we need to inspect the 
+    energy consumption as well as the performance after the implementation. Here we want to set serial code as baseline for our 
+    further implementation and test.</li>
+   </p>
 </ul>
 
 <h3>
