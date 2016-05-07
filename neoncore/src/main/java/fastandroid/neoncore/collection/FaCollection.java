@@ -4,34 +4,31 @@ package fastandroid.neoncore.collection;
  * Created by xgzhu on 5/5/16.
  */
 public class FaCollection {
+
+    // TEST FUNCTION
     public static String hello()
     {
         int len = 2<<16;
         float[] real = new float[len];
         float[] imag = new float[len];
-
         for (int i = 0; i < len; i++) {
             real[i] = (float)Math.sin(Math.toRadians(360 * i / 10));
             imag[i] = 0f;
         }
-
         String s = fft_float_test(real, imag, len) + "\n";
-
         for (int i = 0; i < 16; i++) {
             real[i] = (float)Math.sin(Math.toRadians(360 * i / 10));
             imag[i] = 0f;
         }
-
         fft_float(real,imag,16,0);
         for (int i = 0; i < 16; i++) {
             s += real[i] + " + i" + imag[i] + "\n";
         }
-
         return "Hello from neon collection\n" + s;
     }
 
     // Java interface
-    public static void vector_oper(Object[] array, Object[] vars) {
+    public static void vector(Object[] array, Object[] vars) {
         if (array[0] instanceof Integer && vars[0] instanceof Integer) {
             int[] ia = new int[array.length], ir = new int[vars.length];
             for (int i = 0; i < array.length; i++) {
@@ -43,8 +40,32 @@ public class FaCollection {
                 array[i] = ia[i];
             }
         }
+        if (array[0] instanceof Float && vars[0] instanceof Float) {
+            float[] ia = new float[array.length], ir = new float[vars.length];
+            for (int i = 0; i < array.length; i++) {
+                ia[i] = ((Float)array[i]).floatValue();
+                ir[i] = ((Float)vars[i]).floatValue();
+            }
+            vector_float(ia, array.length, ir, ir.length);
+            for (int i = 0; i < array.length; i++) {
+                array[i] = ia[i];
+            }
+        }
         return;
     }
+
+    public static void vector_int32(int[] array, int[] vars) {
+        vector_int(array, array.length, vars, vars.length);
+    }
+
+    public static void vector_float32(float[] array, float[] vars) {
+        vector_float(array, array.length, vars, vars.length);
+    }
+
+//    public static void vector_comp_float32(float[] real, float[] imag, float[] vars) {
+//        if (real.length != imag.length) return; //error!
+//        vector_complex(real, imag, real.length, vars, vars.length);
+//    }
 
     public static void qsort(Object[] array) {
         if (array[0] instanceof Integer) {
@@ -56,9 +77,26 @@ public class FaCollection {
         return;
     }
 
-    public  static void int_qsort(int[] array) {
+    public  static void qsort_int32(int[] array) {
         qsort_int(array, array.length);
     }
+
+    public  static void qsort_float32(float[] array) {
+        qsort_float(array, array.length);
+    }
+
+    public  static void qsort_double32(double[] array) {
+        qsort_double(array, array.length);
+    }
+
+//    public static void csort(Object[] array) {
+//        if (array[0] instanceof Integer) {
+//            int[] ia = new int[array.length];
+//            for (int i = 0; i < array.length; i++) ia[i] = ((Integer)array[i]).intValue();
+//            sort_int_c(ia, array.length);
+//            for (int i = 0; i < array.length; i++) array[i] = ia[i];
+//        }
+//    }
 
     public static void sort(Object[] array) {
         if (array[0] instanceof Integer) {
@@ -76,23 +114,23 @@ public class FaCollection {
         else if (array[0] instanceof Double) {
             double[] ia = new double[array.length];
             for (int i = 0; i < array.length; i++) ia[i] = ((Double)array[i]).doubleValue();
-            sort_double(ia, array.length);
+            qsort_double(ia, array.length);
             for (int i = 0; i < array.length; i++) array[i] = ia[i];
         }
         return;
     }
 
-    public  static void float_sort(float[] array) {
+    public  static void sort_float32(float[] array) {
         sort_float(array, array.length);
     }
 
-    public  static void int_sort(int[] array) {
+    public  static void sort_int32(int[] array) {
         sort_int(array, array.length);
     }
 
-    public  static void int_sort_c(int[] array) {
-        sort_int_c(array, array.length);
-    }
+//    public  static void int_sort_c(int[] array) {
+//        sort_int_c(array, array.length);
+//    }
 
     public static void fft(Object[] real, Object[] imag) {
         if (real.length != imag.length) return; // throw error
@@ -117,7 +155,7 @@ public class FaCollection {
         return;
     }
 
-    public static void float_fft(float[] real, float[] imag) {
+    public static void fft_float32(float[] real, float[] imag) {
         if (real.length != imag.length) return; // throw error
 
         int len = real.length;
@@ -127,7 +165,7 @@ public class FaCollection {
         fft_float(real, imag, len, 0);
     }
 
-    public static void float_fft_c(float[] real, float[] imag) {
+    public static void fft_float32_c(float[] real, float[] imag) {
         if (real.length != imag.length) return; // throw error
 
         int len = real.length;
@@ -160,7 +198,7 @@ public class FaCollection {
         return;
     }
 
-    public static void float_ifft(float[] real, float[] imag) {
+    public static void ifft_float32(float[] real, float[] imag) {
         if (real.length != imag.length) return; // throw error
 
         int len = real.length;
@@ -173,16 +211,18 @@ public class FaCollection {
 
     // For testing
     private static native String fft_float_test(float[] real, float[] imag, int len);
-    private static native void qsort_int(int[] array, int len);
     private static native void sort_int_c(int[] array, int len);
     private static native void fft_float_c(float[] real, float[] imag, int len, int reverse);
 
     // For calling
     private static native void vector_int(int[]x, int len, int[]var, int num_var);
+    private static native void vector_float(float[]x, int len, float[]var, int num_var);
     private static native void fft_float(float[] real, float[] imag, int len, int reverse);
     private static native void sort_int(int[] array, int len);
     private static native void sort_float(float[] array, int len);
-    private static native void sort_double(double[] array, int len);
+    private static native void qsort_int(int[] array, int len);
+    private static native void qsort_float(float[] array, int len);
+    private static native void qsort_double(double[] array, int len);
 
     static {
         System.loadLibrary("neoncore");

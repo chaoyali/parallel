@@ -11,7 +11,7 @@ ifeq ($(TARGET_ARCH_ABI),$(filter $(TARGET_ARCH_ABI), armeabi-v7a x86))
 ifeq ($(TARGET_ARCH_ABI),x86)
     LOCAL_CFLAGS += -mssse3
 endif
-    LOCAL_SRC_FILES += neon_matrix_intrinsics.c.neon neon_collection_intrinsics.c.neon
+    LOCAL_SRC_FILES += neon_matrix_intrinsics.c.neon neon_collection_intrinsics.c.neon neon_collection_intrinsics_sort.c.neon neon_collection_intrinsics_fft.c.neon
 endif
 
 LOCAL_STATIC_LIBRARIES := cpufeatures

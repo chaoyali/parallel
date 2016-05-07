@@ -12,6 +12,8 @@
 #include <cpu-features.h>
 #include <omp.h>
 #include "neon_collection_intrinsics.h"
+#include "neon_collection_intrinsics_sort.h"
+#include "neon_collection_intrinsics_fft.h"
 #include "helper_set.h"
 
 #define DEBUG 0
@@ -113,7 +115,17 @@ Java_fastandroid_neoncore_collection_FaCollection_sort_1float(JNIEnv *env, jclas
 }
 
 JNIEXPORT void JNICALL
-Java_fastandroid_neoncore_collection_FaCollection_sort_1double(JNIEnv *env, jclass type,
+Java_fastandroid_neoncore_collection_FaCollection_qsort_1float(JNIEnv *env, jclass type, jfloatArray array_,
+                                                              jint len) {
+    jfloat *array = (*env)->GetFloatArrayElements(env, array_, NULL);
+
+    qsort(array, len, sizeof(float), cmpfunc_float);
+
+    (*env)->ReleaseFloatArrayElements(env, array_, array, 0);
+}
+
+JNIEXPORT void JNICALL
+Java_fastandroid_neoncore_collection_FaCollection_qsort_1double(JNIEnv *env, jclass type,
                                                                jdoubleArray array_, jint len) {
     jdouble *array = (*env)->GetDoubleArrayElements(env, array_, NULL);
 
@@ -227,4 +239,21 @@ Java_fastandroid_neoncore_collection_FaCollection_sort_1int_1c(JNIEnv *env, jcla
     combsort(array, len);
 
     (*env)->ReleaseIntArrayElements(env, array_, array, 0);
+}
+
+JNIEXPORT void JNICALL
+Java_fastandroid_neoncore_collection_FaCollection_vector_1float(JNIEnv *env, jclass type,
+                                                                jfloatArray x_, jint len,
+                                                                jfloatArray var_, jint num_var) {
+    jfloat *x = (*env)->GetFloatArrayElements(env, x_, NULL);
+    jfloat *var = (*env)->GetFloatArrayElements(env, var_, NULL);
+    int done = 0;
+#ifdef HAVE_NEON
+    vector_intrinsics_float(x, len, var, num_var);
+#endif
+    if (!done) {
+        vector_float(x, len, var, num_var);
+    }
+    (*env)->ReleaseFloatArrayElements(env, x_, x, 0);
+    (*env)->ReleaseFloatArrayElements(env, var_, var, 0);
 }

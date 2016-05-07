@@ -396,3 +396,17 @@ void vector_int(int* x, int len, int * var, int num_var) {
         x[i] = ans;
     }
 }
+
+
+void vector_float(float* x, int len, float * var, int num_var) {
+    int i;
+    for (i = 0; i < len; i++) {
+        int j = 1;
+        float ans = var[0], x_tmp = x[i], x_cul = x[i];
+        for (j = 1; j < num_var; j++) {
+            ans += x_cul * var[j];
+            x_cul *= x_tmp;
+        }
+        x[i] = ans;
+    }
+}
