@@ -6,7 +6,7 @@
         <li>Matrix Library called FaMatrix. The library contains most useful matrix operations, including matrix transpose, addition, and multiplication. The library support short, int and float data types. The matrix multiplication achieves 14.6x speedup to Java version, 4.1x to C version multiplication. The transpose can achieve 8.9x to Java version, and 1.5x to C version.</li>
         <li>Basic Tools Library called FaCollection. This is a basic library and provide three basic tools, including vectorized calculation, sort and fast fourier transform.</li>
         <br> Based on our our library, we develop a android graphic application to showcase our works. The first application we developed is a rotating points. Here we randomly generate some points in 3D space and then show their projection on X-Y Flat in the screen. Then we use FaMatrix to calculate the next location of these points and then draw their projections again. Finally, we can show a dynamic processing of rotating points.
-        <img height="600px" src="images/pic11.png" style="
+        <img height="600px" src="images/pic11.jpg" style="
       display: block;
       margin: auto;" />
     </p>
@@ -17,7 +17,7 @@
     <p>
         Neon lanes can be used to improve the cache performance of matrix transpose operation. For naive version matrix operation, we can simply use result[j][i] = matrix[i][j] to achieve our goal. But since we take big steps when storing result, the cache will alway miss. To improve the cache hit rate, we use the following algorithm to calculate matrix transpose operation using Neon.
         <br> For 4x4 matrix we first load each row to each lanes, then interleave the first lane and third lane, finally interleave the first lane and third lane again, as shown in the following image.
-        <img height="600px" src="images/pic31.png" style="
+        <img src="images/pic31.png" style="
       display: block;
       margin: auto;" />
         <center>Pic 3.1 4x4 Matrix Transpose</center>
@@ -31,7 +31,7 @@
         <br> lane_low 2 interleaves with lane_low 6
         <br> lane_low 3 interleaves with lane_low 7
         <br>
-        <img height="600px" src="images/pic32.png" style="
+        <img src="images/pic32.png" style="
       display: block;
       margin: auto;" />
         <center>Pic 3.2 8x8 Matrix Transpose</center>
@@ -39,13 +39,13 @@
         <br> After three interleaving operation, we can the get the result.
         <br>
         <br> For matrix with larger size, we split it into multiple 8x8 matrix, then use previous algorithm to calculate them. Notice that if height and width of matrix is the multiple of 8, there must be leftover elements. Leftover elements can be handled using overlapping. This involves processing some of the elements in the array twice. Twice processing will not change the value of transpose.
-        <img height="600px" src="images/pic33.png" style="
+        <img src="images/pic33.png" style="
       display: block;
       margin: auto;" />
         <center>Pic 3.3 Deal with Overlapping in Matrix Transpose</center>
         <br>
         <br> To do the interleaving operation, we use VZIP instruction. VZIP interleaves the 8, 16 or 32-bit elements of a pair of vectors. The operation is the same as that performed by VST2 before storing, so use VST2 rather than VZIP if you need to zip data immediately before writing back to memory.
-        <img height="600px" src="images/pic34.png" style="
+        <img src="images/pic34.png" style="
       display: block;
       margin: auto;" />
         <center>Pic 3.4 Interleaving Two Lanes using VZIP</center>
@@ -80,21 +80,21 @@
             <br>
             <br> We could carefully deal with the leftover to approach the expected speedup. The main goal is to fully utilize the neon lanes.
             <br>
-            <img height="600px" src="images/pic37.png" style="
+            <img src="images/pic37.png" style="
       display: block;
       margin: auto;" />
             <center>Pic 3.7 Leftover in N</center>
             <br>
             <br> In pic. 3.7, there are leftover in N range. Therefore within the block, there must be some elements that cannot fit into the lanes. So we still parallelize in the block until the elements cannot fit into the lanes.
             <br>
-            <img height="600px" src="images/pic38.png" style="
+            <img src="images/pic38.png" style="
       display: block;
       margin: auto;" />
             <center>Pic 3.8 Leftover in M</center>
             <br>
             <br> In pic. 3.8, there are leftover in M range. In this situation, all elements still can fit into the SIMD lanes, since data in same row will be put into SIMD lanes, while the rows don’t have leftover.
             <br>
-            <img height="600px" src="images/pic39.png" style="
+            <img src="images/pic39.png" style="
       display: block;
       margin: auto;" />
             <center>Pic 3.9 Leftover in M and N</center>
@@ -104,14 +104,14 @@
     <h4>Point-Value Representation of A Function</h4> This is a basic function we did with neon. Point-value representation is a processing of calculate the y given x and a function f, that is, y = f(x).
     <br> If we need to put multiple same instruction to a set of value {x}, this function will be extremely useful. The basic processing of using neon to calculate the point value is like Figure 3.10.
     <br>
-    <img height="600px" src="images/pic310.jpg" style="
+    <img src="images/pic310.jpg" style="
       display: block;
       margin: auto;" />
     <center>Pic 3.10 Data Flow of Calculating Point-Value Representation</center>
     <br>
     <br> For the left points, if the total length of vector is not multiple of 4, we can simple use overlap to calculate the leftover.
     <br>
-    <img height="600px" src="images/pic311.jpg" style="
+    <img src="images/pic311.jpg" style="
       display: block;
       margin: auto;" />
     <center>PPic 3.11 Deal with Leftover on Calculating Point-Value Representation</center>
@@ -127,7 +127,7 @@
     <br>
     <br> The in-core algorithm of AA-sort improves on combsort, an extension to bubble sort. Figure X show the basic processes of combsort algorithm. It compare the values with gaps and the shrick the gap. Finally, it use bubble sort to sort the vector.
     <br>
-    <img height="600px" src="images/pic312.jpg" style="
+    <img src="images/pic312.jpg" style="
       display: block;
       margin: auto;" />
     <center>Pic 3.12 Data Flow of Combsort</center>
@@ -147,14 +147,14 @@
 	<br> To deal with the leftover, we set some vectors with only 3 useful values at the end of this array, and the 4th length as the MAX value of this type. Take length = 10 as an example, the leftover is processed as Figure 3.13.
 
 	<br>
-    <img height="600px" src="images/pic313.jpg" style="
+    <img src="images/pic313.jpg" style="
       display: block;
       margin: auto;" />
     <center>Pic 3.13 Deal with Overleft on AA Sort</center>
     <br>
     <br> After sort, the order of values is not ordered but needs us to put them into the right place. So we should put them back to right place. The final order and the we to put them back is shown in Figure 3.14.
     <br>
-    <img height="600px" src="images/pic314.jpg" style="
+    <img src="images/pic314.jpg" style="
       display: block;
       margin: auto;" />
     <center>Pic 3.14 The final step of AA Sort</center>
@@ -168,7 +168,7 @@
 	The data flow of vector merge operation is in Pic 3.15.
 
 	<br>
-    <img height="600px" src="images/pic315.png" style="
+    <img src="images/pic315.png" style="
       display: block;
       margin: auto;" />
     <center>Pic 3.15 Data Flow of Merging Two Vector</center>
@@ -176,7 +176,7 @@
     <br> We test this part of code and got the average run time is shown in Pic 3.16. It can faster than serial version of combsort in c and sort api in java, it can also run as fast as quicksort in C.
 
     <br>
-    <img height="600px" src="images/pic316.jpg" style="
+    <img src="images/pic316.jpg" style="
       display: block;
       margin: auto;" />
     <center>Pic 3.16 Performance of AA Sort</center>
@@ -189,7 +189,7 @@
 
 
     <br>
-    <img height="600px" src="images/pic317.jpg" style="
+    <img src="images/pic317.jpg" style="
       display: block;
       margin: auto;" />
     <center>Pic 3.17 Data Flow of FFT</center>
@@ -207,7 +207,7 @@
 
 
     <br>
-    <img height="600px" src="images/pic318.jpg" style="
+    <img src="images/pic318.jpg" style="
       display: block;
       margin: auto;" />
     <center>Pic 3.18 Performance of FFT</center>
