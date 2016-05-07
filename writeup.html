@@ -6,32 +6,39 @@
         <li>Matrix Library called FaMatrix. The library contains most useful matrix operations, including matrix transpose, addition, and multiplication. The library support short, int and float data types. The matrix multiplication achieves 14.6x speedup to Java version, 4.1x to C version multiplication. The transpose can achieve 8.9x to Java version, and 1.5x to C version.</li>
         <li>Basic Tools Library called FaCollection. This is a basic library and provide three basic tools, including vectorized calculation, sort and fast fourier transform.</li>
         <br> Based on our our library, we develop a android graphic application to showcase our works. The first application we developed is a rotating points. Here we randomly generate some points in 3D space and then show their projection on X-Y Flat in the screen. Then we use FaMatrix to calculate the next location of these points and then draw their projections again. Finally, we can show a dynamic processing of rotating points.
+        <br>
         <img height="600px" src="images/pic11.jpg" style="
       display: block;
       margin: auto;" />
     </p>
     <br>
+
+
+
     <h3>Approach</h3>
     <!--<ul style="list-style: none;">-->
     <h4>Matrix Transpose</h4>
     <p>
         Neon lanes can be used to improve the cache performance of matrix transpose operation. For naive version matrix operation, we can simply use result[j][i] = matrix[i][j] to achieve our goal. But since we take big steps when storing result, the cache will alway miss. To improve the cache hit rate, we use the following algorithm to calculate matrix transpose operation using Neon.
         <br> For 4x4 matrix we first load each row to each lanes, then interleave the first lane and third lane, finally interleave the first lane and third lane again, as shown in the following image.
-        <img src="images/pic31.png" style="
+        <img src="images/pic31.png" style="width:635px;
       display: block;
       margin: auto;" />
         <center>Pic 3.1 4x4 Matrix Transpose</center>
         <br>
-        <br> For 8x8 matrix transpose, we can use the same mechanism: Load one row into two lanes, say lane_high, lane_low. Then interleave each lane. lane_high 0 interleaves with lane_high 4
-        <br> lane_high 1 interleaves with lane_high 5
-        <br> lane_high 2 interleaves with lane_high 6
-        <br> lane_high 3 interleaves with lane_high 7
-        <br> lane_low 0 interleaves with lane_low 4
-        <br> lane_low 1 interleaves with lane_low 5
-        <br> lane_low 2 interleaves with lane_low 6
-        <br> lane_low 3 interleaves with lane_low 7
-        <br>
-        <img src="images/pic32.png" style="
+        <br> For 8x8 matrix transpose, we can use the same mechanism: Load one row into two lanes, say lane_high, lane_low. Then interleave each lane. 
+        <pre><code>
+        lane_high 0 interleaves with lane_high 4
+        lane_high 1 interleaves with lane_high 5
+        lane_high 2 interleaves with lane_high 6
+        lane_high 3 interleaves with lane_high 7
+        lane_low  0 interleaves with lane_low  4
+        lane_low  1 interleaves with lane_low  5
+        lane_low  2 interleaves with lane_low  6
+        lane_low  3 interleaves with lane_low  7
+        </code></pre>
+
+        <img src="images/pic32.png" style="width:400px;
       display: block;
       margin: auto;" />
         <center>Pic 3.2 8x8 Matrix Transpose</center>
@@ -39,13 +46,13 @@
         <br> After three interleaving operation, we can the get the result.
         <br>
         <br> For matrix with larger size, we split it into multiple 8x8 matrix, then use previous algorithm to calculate them. Notice that if height and width of matrix is the multiple of 8, there must be leftover elements. Leftover elements can be handled using overlapping. This involves processing some of the elements in the array twice. Twice processing will not change the value of transpose.
-        <img src="images/pic33.png" style="
+        <img src="images/pic33.png" style="width:400px;
       display: block;
       margin: auto;" />
         <center>Pic 3.3 Deal with Overlapping in Matrix Transpose</center>
         <br>
         <br> To do the interleaving operation, we use VZIP instruction. VZIP interleaves the 8, 16 or 32-bit elements of a pair of vectors. The operation is the same as that performed by VST2 before storing, so use VST2 rather than VZIP if you need to zip data immediately before writing back to memory.
-        <img src="images/pic34.png" style="
+        <img src="images/pic34.png" style="width:400px;
       display: block;
       margin: auto;" />
         <center>Pic 3.4 Interleaving Two Lanes using VZIP</center>
@@ -65,13 +72,13 @@
             <br>
             <br> The implementation is cache unfriendly. Spatial locality in A matrix is good, but in B, the spatial locality is bad since the program access different row in B in every iteration, which need to load a new row into cache. The temporal locality in A matrix is also a problem. We need to reread the same values of A multiple times to compute different elements of C, and A's row could have been evicted from cache by the time we want to reread it by one of B's rows.
             <br>
-            <img src="images/pic35.png" style="
+            <img src="images/pic35.png" style="width:400px;
       display: block;
       margin: auto;" />
             <center>Pic 3.5 Blocked Matrix Multiplication</center>
             <br>
             <br> To improve this, we split each matrix into blocks, so that we can compute partial result for block C while required blocks of A and B remain in cache.
-            <img src="images/pic36.png" style="
+            <img src="images/pic36.png" style="width:450px;
       display: block;
       margin: auto;" />
             <center>Pic 3.6 Parallel within Block</center>
@@ -80,21 +87,21 @@
             <br>
             <br> We could carefully deal with the leftover to approach the expected speedup. The main goal is to fully utilize the neon lanes.
             <br>
-            <img src="images/pic37.png" style="
+            <img src="images/pic37.png" style="width:400px;
       display: block;
       margin: auto;" />
             <center>Pic 3.7 Leftover in N</center>
             <br>
             <br> In pic. 3.7, there are leftover in N range. Therefore within the block, there must be some elements that cannot fit into the lanes. So we still parallelize in the block until the elements cannot fit into the lanes.
             <br>
-            <img src="images/pic38.png" style="
+            <img src="images/pic38.png" style="width:400px;
       display: block;
       margin: auto;" />
             <center>Pic 3.8 Leftover in M</center>
             <br>
             <br> In pic. 3.8, there are leftover in M range. In this situation, all elements still can fit into the SIMD lanes, since data in same row will be put into SIMD lanes, while the rows don’t have leftover.
             <br>
-            <img src="images/pic39.png" style="
+            <img src="images/pic39.png" style="width:400px;
       display: block;
       margin: auto;" />
             <center>Pic 3.9 Leftover in M and N</center>
@@ -104,14 +111,14 @@
     <h4>Point-Value Representation of A Function</h4> This is a basic function we did with neon. Point-value representation is a processing of calculate the y given x and a function f, that is, y = f(x).
     <br> If we need to put multiple same instruction to a set of value {x}, this function will be extremely useful. The basic processing of using neon to calculate the point value is like Figure 3.10.
     <br>
-    <img src="images/pic310.jpg" style="
+    <img src="images/pic310.jpg" style="width:500px;
       display: block;
       margin: auto;" />
     <center>Pic 3.10 Data Flow of Calculating Point-Value Representation</center>
     <br>
     <br> For the left points, if the total length of vector is not multiple of 4, we can simple use overlap to calculate the leftover.
     <br>
-    <img src="images/pic311.jpg" style="
+    <img src="images/pic311.jpg" style="width:400px;
       display: block;
       margin: auto;" />
     <center>PPic 3.11 Deal with Leftover on Calculating Point-Value Representation</center>
@@ -127,48 +134,94 @@
     <br>
     <br> The in-core algorithm of AA-sort improves on combsort, an extension to bubble sort. Figure X show the basic processes of combsort algorithm. It compare the values with gaps and the shrick the gap. Finally, it use bubble sort to sort the vector.
     <br>
-    <img src="images/pic312.jpg" style="
+    <img src="images/pic312.jpg" style="width:400px;
       display: block;
       margin: auto;" />
     <center>Pic 3.12 Data Flow of Combsort</center>
     <br>
     <br> As for the in-core algorithm, the author come up with two operation, that is vector_cmpswap(A, B) and vector_cmpswap_skew(A, B). Then the pseudo code of this algorithm is
-    <br><br>
-    <code>
-		............
-	</code>
-	<br><br>
+
+	<pre><code>
+	gap = (N/4) / SHRINK_FACTOR;
+	while (gap > 1) {
+	    /* straight comparisons */
+	    for (i = 0; i &lt; N/4 - gap; i++)
+	        vector_cmpswap(va[i], va[i+gap]);
+
+	    /* skewed comparisons */
+	    /* when i+gap exceeds N/4 */
+	    for (i = N/4 - gap; i &lt; N/4; i++)
+	        vector_cmpswap_skew(va[i], va[i+gap - N/4]);
+	    /* dividing gap by the shrink factor */
+	    gap /= SHRINK_FACTOR;
+	}
+	do {
+	    for (i = 0; i &lt; N/4 - 1; i++)
+	        vector_cmpswap(va[i], va[i+1]);
+	    vector_cmpswap_skew(va[N/4-1], va[0]);
+	} while( not totally sorted );
+	</code></pre>
+
 	Our implementation of vector_cmpswap(A, B) and vector_cmpswap_skew(A, B) is 
-	<br><br>
-	<code>
-		............
-	</code>
-	<br>
+	<pre><code>
+	void vertor_cmpswap(int32x4_t *a, int32x4_t  *b) 
+	{
+	    int32x4_t t = vminq_s32(*a, *b);
+	    *b = vmaxq_s32(*a, *b);
+	    *a = t;
+	}
+
+	void vertor_cmpswap_skew(int32x4_t *a, int32x4_t *b, int32x4_t *tmp) 
+	{	// tmp here is vector of INT_MAX
+	    int32x4_t tmp_t = vextq_s32(*tmp, *b, 1);    
+	    int32x4_t tmp_b = vextq_s32(*b, *tmp, 1);    
+	    vertor_cmpswap(a, &tmp_b);
+	    *b = vextq_s32(tmp_t, tmp_b, 3);
+	}
+	</code></pre>
 	<br> To deal with the leftover, we set some vectors with only 3 useful values at the end of this array, and the 4th length as the MAX value of this type. Take length = 10 as an example, the leftover is processed as Figure 3.13.
 
-	<br>
-    <img src="images/pic313.jpg" style="
+	<br><br>
+    <img src="images/pic313.jpg" style="width:400px;
       display: block;
       margin: auto;" />
     <center>Pic 3.13 Deal with Overleft on AA Sort</center>
     <br>
     <br> After sort, the order of values is not ordered but needs us to put them into the right place. So we should put them back to right place. The final order and the we to put them back is shown in Figure 3.14.
-    <br>
-    <img src="images/pic314.jpg" style="
+    <br><br>
+    <img src="images/pic314.jpg" style="width:400px;
       display: block;
       margin: auto;" />
     <center>Pic 3.14 The final step of AA Sort</center>
     <br>
     <br> The out-core algorithm is make use of odd-even algorithm. We merge the vector one by one. The pseudo code is 
 
-	<br><br>
-    <code>TBR</code>
-	<br><br>
+	<pre><code>
+	aPos = bPos = 0;
+	vMin = va[aPos++];
+	vMax = vb[bPos++];
+
+	while (aPos &lt; aEnd && bPos &lt; bEnd) {
+	    /* merge vMin and vMax */
+	    vector_merge(vMin, vMax);
+
+	    /* store the smaller vector as output*/
+	    vMergedArray[i] = vMin;
+
+	    /* load next vector and advance pointer */
+	    /* a[aPos*4] is first element of va[aPos]*/
+	    /* and b[bPos*4] is that of vb[bPos] */
+	    if (a[aPos*4] &lt; b[bPos*4])
+	        vMin = va[aPos++];
+	    else
+	        vMin = vb[bPos++];
+	}
+	</code></pre>
 
 	The data flow of vector merge operation is in Pic 3.15.
 
 	<br>
-    <img src="images/pic315.png" style="
+    <img src="images/pic315.png" style="width:400px;
       display: block;
       margin: auto;" />
     <center>Pic 3.15 Data Flow of Merging Two Vector</center>
@@ -176,7 +229,7 @@
     <br> We test this part of code and got the average run time is shown in Pic 3.16. It can faster than serial version of combsort in c and sort api in java, it can also run as fast as quicksort in C.
 
     <br>
-    <img src="images/pic316.jpg" style="
+    <img src="images/pic316.jpg" style="width:400px;
       display: block;
       margin: auto;" />
     <center>Pic 3.16 Performance of AA Sort</center>
@@ -189,25 +242,64 @@
 
 
     <br>
-    <img src="images/pic317.jpg" style="
+    <img src="images/pic317.jpg" style="width:400px;
       display: block;
       margin: auto;" />
     <center>Pic 3.17 Data Flow of FFT</center>
     <br>
     <br> Each line in this Pic is an adder and each W here is a multiplier before the adder. According to the Introduction of Algorithm, the pseudo code of FFT is
 
-<br><br>
-    <code>TBR</code>
-<br><br>
+	<pre><code>
+	A = REVERSE_BIT(A)
+	m = 2
+	while (m &lt;= length) {
+	    w_m = e^i(-M_PI * 2 / m);
+	    {
+	        for (k = 0; k &lt; len; k += m) {
+	            comp_float w;
+	            w = 1.0;
+	            for (j = 0; j &lt; m/2; j++) {
+	                t = w * A[k+j+m/2]
+	                u = A[k+j]
+	                A[k+j] = u + t
+	                A[k+j+m/2] = u - t
+	                w = w * w_m
+	            }
+	        }
+	    }
+	    m = m &lt;&lt; 1
+	}</code></pre>
+
     The REVERSE_BIT here is to calculate the reversed bit of each location and swap the value of them. This implementation is the directly representation of data flow of FFT. However, this implementation is extremely unfriendly for SIMD operation because we do not have any operation on continuous set of data. As a result, we change it to another form, which is hard for understanding but each for SIMD operations. The pseudo code of my implementation is
-<br><br>
-    <code>TBR</code>
-<br><br>
+
+	<pre><code>
+	m = 2
+	h = length >> 1
+	while (m &lt;= length) {
+	    w_m = e^i(-M_PI * 2 / m)
+	    w = 1.0
+	    for (b = 0; b &lt; m/2; b++) {
+	        bit = get_reverse(b, len)
+	        for (k = 0; k &lt; h; k++) {
+	            u = A[bit + k]
+	            t = w * A[bit + h + k]
+	            A[bit + k] = u + t
+	            A[bit + h + k] = u - t
+	        }
+	        w = w * w_m
+	    }
+	    m = m &lt;&lt; 1
+	    h = h &gt;&gt; 1
+	}
+	A = REVERSE_BIT(A)
+	}
+	</code></pre>
+
     The run time of FFT shown in Pic 3.18. We compare the runtime of java version, c version and neon version with different length of signals. For the c version and java version, we also use the our implementation of FFT because it works better because of the locality.
 
 
     <br>
-    <img src="images/pic318.jpg" style="
+    <img src="images/pic318.jpg" style="width:400px;
       display: block;
       margin: auto;" />
     <center>Pic 3.18 Performance of FFT</center>
@@ -218,13 +310,13 @@
 
 <h4>Result</h4>
 	<br>
-    <img src="images/pic1000.png" style="
+    <img src="images/pic1000.png" style="width:400px;
       display: block;
       margin: auto;" />
     <center>Pic Transpose</center>
 
    <br>
-    <img src="images/pic1001.png" style="
+    <img src="images/pic1001.png" style="width:400px;
       display: block;
       margin: auto;" />
     <center>Pic Multiplication</center>
