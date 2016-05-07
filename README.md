@@ -1,4 +1,4 @@
-# parallel
+# FAST ANDROID
 
 FastAndroid is a android library written in C. It make use of The ARM® NEON™, a general purpose SIMD engine to process the array and matrix.
 
