@@ -6,7 +6,7 @@
         <li>Matrix Library called FaMatrix. The library contains most useful matrix operations, including matrix transpose, addition, and multiplication. The library support short, int and float data types. The matrix multiplication achieves 14.6x speedup to Java version, 4.1x to C version multiplication. The transpose can achieve 8.9x to Java version, and 1.5x to C version.</li>
         <li>Basic Tools Library called FaCollection. This is a basic library and provide three basic tools, including vectorized calculation, sort and fast fourier transform.</li>
         <br> Based on our our library, we develop a android graphic application to showcase our works. The first application we developed is a rotating points. Here we randomly generate some points in 3D space and then show their projection on X-Y Flat in the screen. Then we use FaMatrix to calculate the next location of these points and then draw their projections again. Finally, we can show a dynamic processing of rotating points.
-        <img height="600px" src="images/pic11.jpg" style="
+        <img height="600px" src="images/pic11.png" style="
       display: block;
       margin: auto;" />
     </p>
@@ -65,7 +65,7 @@
             <br>
             <br> The implementation is cache unfriendly. Spatial locality in A matrix is good, but in B, the spatial locality is bad since the program access different row in B in every iteration, which need to load a new row into cache. The temporal locality in A matrix is also a problem. We need to reread the same values of A multiple times to compute different elements of C, and A's row could have been evicted from cache by the time we want to reread it by one of B's rows.
             <br>
-            <img height="600px" src="images/pic35.png" style="
+            <img src="images/pic35.png" style="
       display: block;
       margin: auto;" />
             <center>Pic 3.5 Blocked Matrix Multiplication</center>
@@ -104,19 +104,20 @@
     <h4>Point-Value Representation of A Function</h4> This is a basic function we did with neon. Point-value representation is a processing of calculate the y given x and a function f, that is, y = f(x).
     <br> If we need to put multiple same instruction to a set of value {x}, this function will be extremely useful. The basic processing of using neon to calculate the point value is like Figure 3.10.
     <br>
-    <img height="600px" src="images/pic39.png" style="
+    <img height="600px" src="images/pic310.jpg" style="
       display: block;
       margin: auto;" />
-    <center>Pic 3.9 Leftover in M and N</center>
+    <center>Pic 3.10 Data Flow of Calculating Point-Value Representation</center>
     <br>
     <br> For the left points, if the total length of vector is not multiple of 4, we can simple use overlap to calculate the leftover.
     <br>
-    <img height="600px" src="images/pic39.png" style="
+    <img height="600px" src="images/pic311.jpg" style="
       display: block;
       margin: auto;" />
-    <center>Pic 3.9 Leftover in M and N</center>
+    <center>PPic 3.11 Deal with Leftover on Calculating Point-Value Representation</center>
     <br>
-    <br>
+    <br> So we will do only one more time of calculation with left points.
+
 
 
 
@@ -126,67 +127,43 @@
     <br>
     <br> The in-core algorithm of AA-sort improves on combsort, an extension to bubble sort. Figure X show the basic processes of combsort algorithm. It compare the values with gaps and the shrick the gap. Finally, it use bubble sort to sort the vector.
     <br>
-    <img height="600px" src="images/pic39.png" style="
+    <img height="600px" src="images/pic312.jpg" style="
       display: block;
       margin: auto;" />
-    <center>Pic 3.9 Leftover in M and N</center>
+    <center>Pic 3.12 Data Flow of Combsort</center>
     <br>
     <br> As for the in-core algorithm, the author come up with two operation, that is vector_cmpswap(A, B) and vector_cmpswap_skew(A, B). Then the pseudo code of this algorithm is
-    <br>
+    <br><br>
     <code>
-		gap = (N/4) / SHRINK_FACTOR;<br>
-		while (gap > 1) {<br>
-		/* straight comparisons */<br>
-		for (i = 0; i < N/4 - gap; i++)<br>
-		vector_cmpswap(va[i], va[i+gap]);<br>
-		/* skewed comparisons */<br>
-		/* when i+gap exceeds N/4 */<br>
-		for (i = N/4 - gap; i < N/4; i++)<br>
-		vector_cmpswap_skew(va[i], va[i+gap – N/4]);<br>
-		/* dividing gap by the shrink factor */<br>
-		gap /= SHRINK_FACTOR;<br>
-		}<br>
-		do {<br>
-		for (i = 0; i < N/4 - 1; i++)<br>
-		vector_cmpswap(va[i], va[i+1]);<br>
-		vector_cmpswap_skew(va[N/4-1], va[0]);<br>
-		} while( not totally sorted );<br>
+		............
+	</code>
+	<br><br>
+	Our implementation of vector_cmpswap(A, B) and vector_cmpswap_skew(A, B) is 
+	<br><br>
+	<code>
+		............
 	</code>
 	<br>
-	Our implementation of vector_cmpswap(A, B) and vector_cmpswap_skew(A, B) is 
-	<code>
-		void vertor_cmpswap(int32x4_t *a, int32x4_t  *b) 
-		{
-		    int32x4_t t = vminq_s32(*a, *b);
-		    *b = vmaxq_s32(*a, *b);
-		    *a = t;
-		}
-		void vertor_cmpswap_skew(int32x4_t *a, int32x4_t *b, int32x4_t *tmp) 
-		{	// tmp here is vector of INT_MAX
-		    int32x4_t tmp_t = vextq_s32(*tmp, *b, 1);    
-		    int32x4_t tmp_b = vextq_s32(*b, *tmp, 1);    
-		    vertor_cmpswap(a, &tmp_b);
-		    *b = vextq_s32(tmp_t, tmp_b, 3);
-	}
-	</code>
 	<br> To deal with the leftover, we set some vectors with only 3 useful values at the end of this array, and the 4th length as the MAX value of this type. Take length = 10 as an example, the leftover is processed as Figure 3.13.
 
 	<br>
-    <img height="600px" src="images/pic313.png" style="
+    <img height="600px" src="images/pic313.jpg" style="
       display: block;
       margin: auto;" />
     <center>Pic 3.13 Deal with Overleft on AA Sort</center>
     <br>
     <br> After sort, the order of values is not ordered but needs us to put them into the right place. So we should put them back to right place. The final order and the we to put them back is shown in Figure 3.14.
     <br>
-    <img height="600px" src="images/pic314.png" style="
+    <img height="600px" src="images/pic314.jpg" style="
       display: block;
       margin: auto;" />
     <center>Pic 3.14 The final step of AA Sort</center>
     <br>
     <br> The out-core algorithm is make use of odd-even algorithm. We merge the vector one by one. The pseudo code is 
 
+	<br><br>
     <code>TBR</code>
+	<br><br>
 
 	The data flow of vector merge operation is in Pic 3.15.
 
@@ -199,7 +176,7 @@
     <br> We test this part of code and got the average run time is shown in Pic 3.16. It can faster than serial version of combsort in c and sort api in java, it can also run as fast as quicksort in C.
 
     <br>
-    <img height="600px" src="images/pic316.png" style="
+    <img height="600px" src="images/pic316.jpg" style="
       display: block;
       margin: auto;" />
     <center>Pic 3.16 Performance of AA Sort</center>
@@ -212,24 +189,25 @@
 
 
     <br>
-    <img height="600px" src="images/pic317.png" style="
+    <img height="600px" src="images/pic317.jpg" style="
       display: block;
       margin: auto;" />
     <center>Pic 3.17 Data Flow of FFT</center>
     <br>
     <br> Each line in this Pic is an adder and each W here is a multiplier before the adder. According to the Introduction of Algorithm, the pseudo code of FFT is
 
+<br><br>
     <code>TBR</code>
-
+<br><br>
     The REVERSE_BIT here is to calculate the reversed bit of each location and swap the value of them. This implementation is the directly representation of data flow of FFT. However, this implementation is extremely unfriendly for SIMD operation because we do not have any operation on continuous set of data. As a result, we change it to another form, which is hard for understanding but each for SIMD operations. The pseudo code of my implementation is
-
+<br><br>
     <code>TBR</code>
-
+<br><br>
     The run time of FFT shown in Pic 3.18. We compare the runtime of java version, c version and neon version with different length of signals. For the c version and java version, we also use the our implementation of FFT because it works better because of the locality.
 
 
     <br>
-    <img height="600px" src="images/pic318.png" style="
+    <img height="600px" src="images/pic318.jpg" style="
       display: block;
       margin: auto;" />
     <center>Pic 3.18 Performance of FFT</center>
