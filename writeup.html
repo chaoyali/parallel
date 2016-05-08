@@ -132,6 +132,20 @@ for (iblock = 0; iblock &lt; m_a; iblock += BLOCK_M)
         <center><var>Pic 3.9 Leftover in M and N</var></center>
         <br>
         <br> In pic. 3.9, there are leftover in both M and N range. In this case, we choose to implement the leftover using sequential way.
+
+        <br><br>
+
+        For the Pic 3.7 Leftover in N, although some of the leftover can fit into the SIMD, there are still parts of data cannot fit into SIMD, since the N dimension of leftover is too small. For example, if N dimension of block is 32, and dimension of leftover matrix is 5, then the last 1 column of data cannot fit into NEON lanes. To solve that, we came up a solution as shown below. We firstly calculate the element that cannot can fit into lanes. Then, for the remaining part, we transpose that part, so that it can fit into the SIMD lanes, as shown in Pic 3.9.1.
+
+        <br><br>
+        <img src="images/pic39p.png" style="width:400px;
+	      display: block;
+	      margin: auto;" />
+        <center><var>Pic 3.9.1 Deal with Leftover that cannot fit into NEON lane</var></center>
+        <br>
+        <br>
+
+
     </p>
 
 
