@@ -19,7 +19,9 @@ We build an environment for android NDK developing. All C/NEON code can be found
 
 ## Performance
 
-The matrix multiplication achieves 14.6x speedup to Java version, 4.1x to C version multiplication. The transpose can achieve 8.9x to Java version, and 1.5x to C version. The Tools of sorting array can run 5x - 7x faster than java code and 1.1x - 1.3x faster than quicksort code in C. Tools of fft can run 15x - 30x faster than Java implementation and 1.2x - 1.5x faster than same implementation on C code.
+Speed: The matrix multiplication achieves 14.6x speedup to Java version, 4.1x to C version multiplication. The transpose can achieve 8.9x to Java version, and 1.5x to C version. The Tools of sorting array can run 5x - 7x faster than java code and 1.1x - 1.3x faster than quicksort code in C. Tools of fft can run 15x - 30x faster than Java implementation and 1.2x - 1.5x faster than same implementation on C code.
+
+Energy Consumption: Device broken, so we should to fix it first. Coming soon.
 
 ## Online Document
 
