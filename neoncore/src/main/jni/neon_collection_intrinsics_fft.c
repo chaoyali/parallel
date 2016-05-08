@@ -62,6 +62,27 @@ inline void comp_float_multi_intric(float32x4_t* dstr, float32x4_t* dsti, float3
     *dsti = vaddq_f32(aibr, arbi);
 }
 
+
+inline void comp_float_add_intric_2(float32x2_t* dstr, float32x2_t* dsti, float32x2_t ar, float32x2_t ai, float32x2_t br, float32x2_t bi) {
+    *dstr = vadd_f32(ar, br);
+    *dsti = vadd_f32(ai, bi);
+}
+
+inline void comp_float_minus_intric_2(float32x2_t* dstr, float32x2_t* dsti, float32x2_t ar, float32x2_t ai, float32x2_t br, float32x2_t bi) {
+    *dstr = vsub_f32(ar, br);
+    *dsti = vsub_f32(ai, bi);
+}
+
+
+inline void comp_float_multi_intric_2(float32x2_t* dstr, float32x2_t* dsti, float32x2_t ar, float32x2_t ai, float32x2_t br, float32x2_t bi) {
+    float32x2_t arbr = vmul_f32(ar, br);
+    float32x2_t aibi = vmul_f32(ai, bi);
+    float32x2_t aibr = vmul_f32(ai, br);
+    float32x2_t arbi = vmul_f32(ar, bi);
+    *dstr = vsub_f32(arbr, aibi);
+    *dsti = vadd_f32(aibr, arbi);
+}
+
 void fft_intrinsics_float(float * real, float * imag, int len, int reverse) {
     int m = 2;
     int h = len >> 1;
@@ -94,6 +115,39 @@ void fft_intrinsics_float(float * real, float * imag, int len, int reverse) {
                 vst1q_f32(imag + bit + h + k, imag_f2);
             }
             comp_float_multi_intric(&w_real, &w_imag, w_m_real, w_m_imag, w_real, w_imag);
+        }
+        m = m << 1;
+        h = h >> 1;
+    }
+
+    while (h >= 2) {
+        float32x2_t w_m_real = vdup_n_f32((float32_t) cos(M_PI * 2 / m));
+        float32x2_t w_m_imag;
+        if (reverse)
+            w_m_imag = vdup_n_f32((float32_t) sin(M_PI * 2 / m));
+        else
+            w_m_imag = vdup_n_f32((float32_t) -sin(M_PI * 2 / m));
+        float32x2_t w_real = vdup_n_f32(1.0);
+        float32x2_t w_imag = vdup_n_f32(0.0);
+
+        int b, k;
+        for (b = 0; b < m/2; b++) {
+            int bit = get_reverse(b, len);
+            for (k = 0; k < h; k += 4) {
+
+                float32x2_t real_f1 = vld1_f32(real + bit + k), imag_f1 = vld1_f32(imag + bit + k), real_f2 = vld1_f32(real + bit + h + k), imag_f2 = vld1_f32(imag + bit + h + k);
+                float32x2_t u_real = real_f1, u_imag = imag_f1, t_real, t_imag;
+
+                comp_float_multi_intric_2(&t_real, &t_imag, real_f2, imag_f2, w_real, w_imag);
+                comp_float_add_intric_2(&(real_f1), &(imag_f1), u_real, u_imag, t_real, t_imag);
+                comp_float_minus_intric_2(&(real_f2), &(imag_f2), u_real, u_imag, t_real, t_imag);
+
+                vst1_f32(real + bit + k, real_f1);
+                vst1_f32(imag + bit + k, imag_f1);
+                vst1_f32(real + bit + h + k, real_f2);
+                vst1_f32(imag + bit + h + k, imag_f2);
+            }
+            comp_float_multi_intric_2(&w_real, &w_imag, w_m_real, w_m_imag, w_real, w_imag);
         }
         m = m << 1;
         h = h >> 1;

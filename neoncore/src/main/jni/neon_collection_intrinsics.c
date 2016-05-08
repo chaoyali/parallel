@@ -55,12 +55,16 @@ void vector_intrinsics_int(int* x, int len, int * var, int num_var) {
 void vector_intrinsics_float(float* x, int len, float* var, int num_var) {
     int l = len >> 2;
     int left = len - (l<<2);
-    int i;
+    int i, j;
     float32x4_t deal_left;
     if (left > 0) {
         deal_left = vld1q_f32(x + len - 4);
     }
-    for (i = 0; i < l; i++) {
+
+    // Here we do not have much change in using open mp
+#pragma omp parallel for
+    for (i = 0; i < l; i+=4) {
+//        for (j = 0)
         float32x4_t ans = vdupq_n_f32(var[0]);
         float32x4_t x_tmp = vld1q_f32(x + i*4);
         float32x4_t x_cul = x_tmp;

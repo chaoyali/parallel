@@ -10,6 +10,7 @@
 #include <string.h>
 #include <math.h>
 #include <cpu-features.h>
+#include <android/log.h>
 #include <omp.h>
 #include "neon_collection_intrinsics.h"
 #include "neon_collection_intrinsics_sort.h"
@@ -240,34 +241,64 @@ JNIEXPORT jstring JNICALL
 Java_fastandroid_neoncore_collection_FaCollection_fft_1float_1test(JNIEnv *env, jobject instance,
                                                                    jfloatArray real_, jfloatArray imag_,
                                                                    jint len) {
-    jfloat *real = (*env)->GetFloatArrayElements(env, real_, NULL);
-    jfloat *imag = (*env)->GetFloatArrayElements(env, imag_, NULL);
-
-    double t0, t1, t_neon, t_ser;
-
-    t0 = now_ms();
-
-    fft_float(real, imag, len, 0);
-
-    t1 = now_ms();
-    t_ser = t1 - t0;
-
+    int i;
+    char buffer[1024] = "hello fft\n";
+    char* str;
 
 #ifdef HAVE_NEON
-    t0 = now_ms();
-    fft_intrinsics_float(real, imag, len, 0);
-    t1 = now_ms();
-    t_neon = t1 - t0;
+    for (i = 10; i < 20; i++) {
+
+        asprintf(&str, "length: 2^%d.\n", i);
+        strlcat(buffer, str, sizeof(buffer));
+        free(str);
+
+        int len = 1<<i, iter, iter_num = 5;
+        double t0, t1, t_neon = 0, t_ser = 0;
+        float* r1 = (float *) malloc(len * sizeof(float));
+        float* r2 = (float *) malloc(len * sizeof(float));
+        float* i1 = (float *) malloc(len * sizeof(float));
+        float* i2 = (float *) malloc(len * sizeof(float));
+        for (iter = 0; iter < iter_num; iter++) {
+            int j;
+            for (j = 0; j < len; j++) {
+                r1[j] = (float)cos(M_PI * j / 10);
+                r2[j] = r1[j];
+                i1[j] = 0;
+                i2[j] = 0;
+            }
+
+            t0 = now_ms();
+            fft_float(r1, i1, len, 0);
+            t1 = now_ms();
+            t_ser += t1 - t0;
+
+            t0 = now_ms();
+            fft_intrinsics_float(r2, i2, len, 0);
+            t1 = now_ms();
+            t_neon += t1 - t0;
+
+            for (j = 0; j < len; j++) {
+                if (r1[j] > r2[j] + 0.01 || r1[j] < r2[j] - 0.01) {
+                    asprintf(&str, "ERROR!! at %d, %g != %g\n", j, r1[j], r2[j]);
+                    strlcat(buffer, str, sizeof(buffer));
+                    free(str);
+                    break;
+                }
+            }
+        }
+        free(r1);
+        free(r2);
+        free(i1);
+        free(i2);
+        asprintf(&str, "c version: %g ms.\n", t_ser/iter_num);
+        strlcat(buffer, str, sizeof(buffer));
+        free(str);
+        asprintf(&str, "neon version: %g ms (x%.3g faster than c).\n", t_neon/iter_num, t_ser/t_neon);
+        strlcat(buffer, str, sizeof(buffer));
+        free(str);
+    }
 #endif
 
-    (*env)->ReleaseFloatArrayElements(env, real_, real, 0);
-    (*env)->ReleaseFloatArrayElements(env, imag_, imag, 0);
-
-    char buffer[512] = "hello fft\n";
-    char* str;
-    asprintf(&str, "%g ms neon vs %g ms serial (x%g faster)\n", t_neon, t_ser, t_ser / (t_neon < 1e-6 ? 1. : t_neon));
-    strlcat(buffer, str, sizeof buffer);
-    free(str);
     return (*env)->NewStringUTF(env, buffer);
 }
 
@@ -278,48 +309,133 @@ Java_fastandroid_neoncore_collection_FaCollection_sort_1int_1test(JNIEnv *env, j
     char buffer[1024] = "hello sort\n";
     char* str;
 #ifdef HAVE_NEON
-    for (i = 17; i < 23; i++) {
+    for (i = 18; i < 23; i++) {
 
         asprintf(&str, "length: 2^%d.\n", i);
         strlcat(buffer, str, sizeof(buffer));
         free(str);
+        double t0, t1, t_neon=0, t_ser=0, t_qs=0;
 
         int len = 1<<i;
         int* a1 = (int *) malloc(len * sizeof(int));
         int* a2 = (int *) malloc(len * sizeof(int));
         int* a3 = (int *) malloc(len * sizeof(int));
-        int j;
-        for (j = 0; j < len; j++) {
-            a1[j] = (j + len / 2) * (j % 77) - (j % 111) * (j - len/3);
-            a2[j] = a1[j];
-            a3[j] = a1[j];
+        int j, iter, iter_num = 5;
+        __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "FirstHERE!!!!");
+
+        for (iter = 0; iter < iter_num; iter++) {
+            for (j = 0; j < len; j++) {
+                a1[j] = (j + len / 2) * (j % 77) - (j % 111) * (j - len/3);
+                a2[j] = a1[j];
+                a3[j] = a1[j];
+            }
+
+
+            t0 = now_ms();
+            qsort(a1, len, sizeof(int), cmpfunc_int);
+            t1 = now_ms();
+            t_qs += t1 - t0;
+
+            t0 = now_ms();
+            combsort(a2, len);
+            t1 = now_ms();
+            t_ser += t1 - t0;
+
+            t0 = now_ms();
+            combsort_intrinsics_int(a3, len);
+            t1 = now_ms();
+            t_neon += t1 - t0;
+
+            for (j = 0; j < len; j++) {
+                if (a1[j] != a3[j]) {
+                    asprintf(&str, "ERROR!! at %d, %d != %d\n", j, a1[j], a3[j]);
+                    strlcat(buffer, str, sizeof(buffer));
+                    free(str);
+                    break;
+                }
+            }
         }
-
-        double t0, t1, t_neon, t_ser, t_qs;
-
-        t0 = now_ms();
-        qsort(a1, len, sizeof(int), cmpfunc_int);
-        t1 = now_ms();
-        t_qs = t1 - t0;
-        asprintf(&str, "qs version: %g ms.\n", t_qs);
+        asprintf(&str, "qs version: %g ms.\t", t_qs);
         strlcat(buffer, str, sizeof(buffer));
         free(str);
-
-        t0 = now_ms();
-        combsort(a2, len);
-        t1 = now_ms();
-        t_ser = t1 - t0;
         asprintf(&str, "c version: %g ms.\n", t_ser);
         strlcat(buffer, str, sizeof(buffer));
         free(str);
-
-        t0 = now_ms();
-        combsort_intrinsics_int(a3, len);
-        t1 = now_ms();
-        t_neon = t1 - t0;
-        asprintf(&str, "neon version: %g ms (x%g faster than c, x%g faster than qs).\n", t_neon, t_ser/t_neon, t_qs/t_neon);
+        asprintf(&str, "neon version: %g ms (x%.3g faster than c, x%.3g faster than qs).\n", t_neon, t_ser/t_neon, t_qs/t_neon);
         strlcat(buffer, str, sizeof(buffer));
         free(str);
+
+//        __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "SECONDHERE!!!!");
+
+        free(a1);
+        free(a2);
+        free(a3);
+    }
+#endif
+
+    return (*env)->NewStringUTF(env, buffer);
+}
+
+
+JNIEXPORT jstring JNICALL
+Java_fastandroid_neoncore_collection_FaCollection_vector_1int_1test(JNIEnv *env, jclass type) {
+
+    int i;
+    char buffer[1024] = "hello vector\n";
+    char* str;
+#ifdef HAVE_NEON
+    for (i = 0; i < 50; i+=5) {
+
+        asprintf(&str, "var_num length: %d.\n", i);
+        strlcat(buffer, str, sizeof(buffer));
+        free(str);
+
+        int len = 1<<14;
+        int num_var = i;
+        int* var = (int *) malloc(num_var * sizeof(int));
+
+        double t0, t1, t_neon = 0, t_ser = 0;
+
+        int* a1 = (int *) malloc(len * sizeof(int));
+        int* a2 = (int *) malloc(len * sizeof(int));
+
+        int j, iter, iter_len = 20;
+        for (iter = 0; iter < iter_len; iter ++) {
+            for (j = 0; j < len; j++) {
+                a1[j] = j + (j * iter) % 77;
+                a2[j] = a1[j];
+            }
+            for (j = 0; j < num_var; j++) {
+                var[j] = num_var - j + 1;
+            }
+
+            t0 = now_ms();
+            vector_int(a1, len, var, num_var);
+            t1 = now_ms();
+            t_ser += t1 - t0;
+
+
+            t0 = now_ms();
+            vector_intrinsics_int(a2, len, var, num_var);
+            t1 = now_ms();
+            t_neon += t1 - t0;
+
+            for (j = 0; j < len; j++) {
+                if (a1[j] != a2[j]) {
+                    asprintf(&str, "ERROR!! at %d, %d != %d\n", j, a1[j], a2[j]);
+                    strlcat(buffer, str, sizeof(buffer));
+                    free(str);
+                    break;
+                }
+            }
+        }
+        asprintf(&str, "c version: %g ms.\nneon version: %g ms (x%.3g faster than c).\n", t_ser/iter_len, t_neon/iter_len, t_ser/t_neon);
+        strlcat(buffer, str, sizeof(buffer));
+        free(str);
+
+        free(a1);
+        free(a2);
+        free(var);
     }
 #endif
 

@@ -10,7 +10,7 @@
 #define INT_MAX 0x7fffffff
 #define APPNAME "NALIB"
 
-#define CACHE_LINE 2048
+#define CACHE_LINE 256
 
 #define LANES_INT_NUM 4
 #define LANES_SHORT_NUM 8

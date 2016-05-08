@@ -6,26 +6,36 @@ package fastandroid.neoncore.collection;
 public class FaCollection {
 
     // TEST FUNCTION
-    public static String hello()
+    public static String test_fft()
     {
-        int len = 2<<16;
-        float[] real = new float[len];
-        float[] imag = new float[len];
-        for (int i = 0; i < len; i++) {
-            real[i] = (float)Math.sin(Math.toRadians(360 * i / 10));
-            imag[i] = 0f;
-        }
-        String s = fft_float_test(real, imag, len) + "\n";
-        for (int i = 0; i < 16; i++) {
-            real[i] = (float)Math.sin(Math.toRadians(360 * i / 10));
-            imag[i] = 0f;
-        }
-        fft_float(real,imag,16,0);
-        for (int i = 0; i < 16; i++) {
-            s += real[i] + " + i" + imag[i] + "\n";
-        }
-        return "Hello from neon collection\n" + sort_int_test() + s;
+//        int len = 2<<16;
+//        float[] real = new float[len];
+//        float[] imag = new float[len];
+//        for (int i = 0; i < len; i++) {
+//            real[i] = (float)Math.sin(Math.toRadians(360 * i / 10));
+//            imag[i] = 0f;
+//        }
+//        String s = fft_float_test(real, imag, len) + "\n";
+//        for (int i = 0; i < 16; i++) {
+//            real[i] = (float)Math.sin(Math.toRadians(360 * i / 10));
+//            imag[i] = 0f;
+//        }
+//        fft_float(real,imag,16,0);
+//        for (int i = 0; i < 16; i++) {
+//            s += real[i] + " + i" + imag[i] + "\n";
+//        }
+        return fft_float_test();
     }
+
+    public static String test_vector() {
+        return vector_int_test();
+    }
+
+    public static String test_sort() {
+        return sort_int_test();
+    }
+
+
 
     // Java interface
     public static void vector(Object[] array, Object[] vars) {
@@ -210,8 +220,9 @@ public class FaCollection {
 
 
     // For testing
-    private static native String fft_float_test(float[] real, float[] imag, int len);
+    private static native String fft_float_test();
     private static native String sort_int_test();
+    private static native String vector_int_test();
     private static native void sort_int_c(int[] array, int len);
     private static native void fft_float_c(float[] real, float[] imag, int len, int reverse);
 
