@@ -109,7 +109,16 @@ Java_fastandroid_neoncore_collection_FaCollection_sort_1float(JNIEnv *env, jclas
                                                               jint len) {
     jfloat *array = (*env)->GetFloatArrayElements(env, array_, NULL);
 
+#ifdef HAVE_NEON
+    if (can_use_neon()) {
+        combsort_intrinsics_float(array, len);
+    }
+    else {
+        qsort(array, len, sizeof(float), cmpfunc_float);
+    }
+#else
     qsort(array, len, sizeof(float), cmpfunc_float);
+#endif
 
     (*env)->ReleaseFloatArrayElements(env, array_, array, 0);
 }
@@ -156,42 +165,6 @@ Java_fastandroid_neoncore_collection_FaCollection_fft_1float(JNIEnv *env, jobjec
 
     (*env)->ReleaseFloatArrayElements(env, real_, real, 0);
     (*env)->ReleaseFloatArrayElements(env, imag_, imag, 0);
-}
-
-
-JNIEXPORT jstring JNICALL
-Java_fastandroid_neoncore_collection_FaCollection_fft_1float_1test(JNIEnv *env, jobject instance,
-                                                                   jfloatArray real_, jfloatArray imag_,
-                                                                   jint len) {
-    jfloat *real = (*env)->GetFloatArrayElements(env, real_, NULL);
-    jfloat *imag = (*env)->GetFloatArrayElements(env, imag_, NULL);
-
-    double t0, t1, t_neon, t_ser;
-
-    t0 = now_ms();
-
-    fft_float(real, imag, len, 0);
-
-    t1 = now_ms();
-    t_ser = t1 - t0;
-
-
-#ifdef HAVE_NEON
-    t0 = now_ms();
-    fft_intrinsics_float(real, imag, len, 0);
-    t1 = now_ms();
-    t_neon = t1 - t0;
-#endif
-
-    (*env)->ReleaseFloatArrayElements(env, real_, real, 0);
-    (*env)->ReleaseFloatArrayElements(env, imag_, imag, 0);
-
-    char buffer[512] = "hello fft\n";
-    char* str;
-    asprintf(&str, "%g ms neon vs %g ms serial (x%g faster)\n", t_neon, t_ser, t_ser / (t_neon < 1e-6 ? 1. : t_neon));
-    strlcat(buffer, str, sizeof buffer);
-    free(str);
-    return (*env)->NewStringUTF(env, buffer);
 }
 
 
@@ -256,4 +229,99 @@ Java_fastandroid_neoncore_collection_FaCollection_vector_1float(JNIEnv *env, jcl
     }
     (*env)->ReleaseFloatArrayElements(env, x_, x, 0);
     (*env)->ReleaseFloatArrayElements(env, var_, var, 0);
+}
+
+
+
+/////////////// Following are test code.
+
+
+JNIEXPORT jstring JNICALL
+Java_fastandroid_neoncore_collection_FaCollection_fft_1float_1test(JNIEnv *env, jobject instance,
+                                                                   jfloatArray real_, jfloatArray imag_,
+                                                                   jint len) {
+    jfloat *real = (*env)->GetFloatArrayElements(env, real_, NULL);
+    jfloat *imag = (*env)->GetFloatArrayElements(env, imag_, NULL);
+
+    double t0, t1, t_neon, t_ser;
+
+    t0 = now_ms();
+
+    fft_float(real, imag, len, 0);
+
+    t1 = now_ms();
+    t_ser = t1 - t0;
+
+
+#ifdef HAVE_NEON
+    t0 = now_ms();
+    fft_intrinsics_float(real, imag, len, 0);
+    t1 = now_ms();
+    t_neon = t1 - t0;
+#endif
+
+    (*env)->ReleaseFloatArrayElements(env, real_, real, 0);
+    (*env)->ReleaseFloatArrayElements(env, imag_, imag, 0);
+
+    char buffer[512] = "hello fft\n";
+    char* str;
+    asprintf(&str, "%g ms neon vs %g ms serial (x%g faster)\n", t_neon, t_ser, t_ser / (t_neon < 1e-6 ? 1. : t_neon));
+    strlcat(buffer, str, sizeof buffer);
+    free(str);
+    return (*env)->NewStringUTF(env, buffer);
+}
+
+JNIEXPORT jstring JNICALL
+Java_fastandroid_neoncore_collection_FaCollection_sort_1int_1test(JNIEnv *env, jclass type) {
+
+    int i;
+    char buffer[1024] = "hello sort\n";
+    char* str;
+#ifdef HAVE_NEON
+    for (i = 17; i < 23; i++) {
+
+        asprintf(&str, "length: 2^%d.\n", i);
+        strlcat(buffer, str, sizeof(buffer));
+        free(str);
+
+        int len = 1<<i;
+        int* a1 = (int *) malloc(len * sizeof(int));
+        int* a2 = (int *) malloc(len * sizeof(int));
+        int* a3 = (int *) malloc(len * sizeof(int));
+        int j;
+        for (j = 0; j < len; j++) {
+            a1[j] = (j + len / 2) * (j % 77) - (j % 111) * (j - len/3);
+            a2[j] = a1[j];
+            a3[j] = a1[j];
+        }
+
+        double t0, t1, t_neon, t_ser, t_qs;
+
+        t0 = now_ms();
+        qsort(a1, len, sizeof(int), cmpfunc_int);
+        t1 = now_ms();
+        t_qs = t1 - t0;
+        asprintf(&str, "qs version: %g ms.\n", t_qs);
+        strlcat(buffer, str, sizeof(buffer));
+        free(str);
+
+        t0 = now_ms();
+        combsort(a2, len);
+        t1 = now_ms();
+        t_ser = t1 - t0;
+        asprintf(&str, "c version: %g ms.\n", t_ser);
+        strlcat(buffer, str, sizeof(buffer));
+        free(str);
+
+        t0 = now_ms();
+        combsort_intrinsics_int(a3, len);
+        t1 = now_ms();
+        t_neon = t1 - t0;
+        asprintf(&str, "neon version: %g ms (x%g faster than c, x%g faster than qs).\n", t_neon, t_ser/t_neon, t_qs/t_neon);
+        strlcat(buffer, str, sizeof(buffer));
+        free(str);
+    }
+#endif
+
+    return (*env)->NewStringUTF(env, buffer);
 }

@@ -57,7 +57,8 @@ inline void vertor_cmpswap_skew(int32x4_t *a, int32x4_t  *b, int32x4_t *tmp) {
     *b = vextq_s32(tmp_t, tmp_b, 3);
 }
 
-inline void vector_merge(int32x4_t *vMin, int32x4_t *vMax, int32x4_t *max_tmp) {
+inline void vector_merge(int32x4_t *vMin, int32x4_t *vMax, int32x4_t *max_tmp) { // NEON does not work here
+    /*
     int min = -INT_MAX;
     vertor_cmpswap(vMin, vMax);
     int32x4_t vMin_tmp = vextq_s32(*vMin, *max_tmp, 2); // => (b2,b3,m,m)
@@ -68,6 +69,15 @@ inline void vector_merge(int32x4_t *vMin, int32x4_t *vMax, int32x4_t *max_tmp) {
     vMin_tmp2 = vextq_s32(vMin_tmp, vMin_tmp2, 3);  // => (m,m,m,b0)
     vertor_cmpswap(&vMin_tmp, vMax);
     *vMin = vextq_s32(vMin_tmp2, vMin_tmp, 3);
+     */
+
+    int test[8];
+    vst1q_s32(test, *vMin);
+    vst1q_s32(test+4, *vMax);
+    sort_vector(test, 8);
+    *vMin = vld1q_s32(test);
+    *vMax = vld1q_s32(test+4);
+
 }
 
 inline sort_vector(int* v, int n) {
@@ -87,9 +97,9 @@ inline sort_vector(int* v, int n) {
 }
 
 void combsort_intrinsics_int(int * lst, int len) {
-    if (len > CACHE_LINE) {
+    if (len * LANES_INT_NUM > CACHE_LINE) {
         int l = ((len / 2 + 3) >> 2) << 2, i;
-        if (l < CACHE_LINE) {
+        if (l * LANES_INT_NUM < CACHE_LINE) {
 #pragma omp parallel for
             for (i = 0; i < 2; i++) {
                 int add = (i == 0) ? 0 : l;
@@ -111,6 +121,25 @@ void combsort_intrinsics_int_merge(int * lst1, int len1, int * lst2, int len2) {
 
     int* lst0 = (int*)malloc(len1 * sizeof(int));
     memcpy(lst0, lst1, len1 * sizeof(int));
+
+    int aPos = 0, bPos = 0, i = 0;
+    while (aPos < len1 && bPos < len2) {
+        if (lst0[aPos] < lst2[bPos]) {
+            lst1[i++] = lst0[aPos++];
+        }
+        else {
+            lst1[i++] = lst2[bPos++];
+        }
+    }
+
+    if (aPos < len1) {
+        memcpy(lst1 + i, lst0 + aPos, (len1 - aPos) * sizeof(int));
+    }
+    free(lst0);
+
+/*
+    int* lst0 = (int*)malloc(len1 * sizeof(int));
+    memcpy(lst0, lst1, len1 * sizeof(int));
     int aPos = 0, bPos = 0, i = 0;
     int32x4_t vMin = vld1q_s32(lst1);
     int32x4_t vMax = vld1q_s32(lst2);
@@ -118,9 +147,7 @@ void combsort_intrinsics_int_merge(int * lst1, int len1, int * lst2, int len2) {
     int32x4_t max_tmp = vdupq_n_s32(INT_MAX);
     aPos = aPos + 4;
     bPos = bPos + 4;
-//    if (len2 & 0x03 != 0) { // switch the leftover to INT_MAX
-    vst1q_s32(lst2 + len2, max_tmp);
-//    }
+    vst1q_s32(lst2 + len2, max_tmp); // switch the leftover to INT_MAX
     while (aPos < len1 && bPos < len2) {
         vector_merge(&vMin, &vMax, &max_tmp);
         vst1q_s32(lst1 + i, vMin);
@@ -134,15 +161,32 @@ void combsort_intrinsics_int_merge(int * lst1, int len1, int * lst2, int len2) {
             bPos += 4;
         }
     }
+    while (aPos < len1) {
+        vector_merge(&vMin, &vMax, &max_tmp);
+        vst1q_s32(lst1 + i, vMin);
+        i += 4;
+        vMin = vld1q_s32(lst0 + aPos);
+        aPos += 4;
+    }
+    while (bPos < len2) {
+        vector_merge(&vMin, &vMax, &max_tmp);
+        vst1q_s32(lst1 + i, vMin);
+        i += 4;
+        vMin = vld1q_s32(lst2 + bPos);
+        bPos += 4;
+    }
+
     vector_merge(&vMin, &vMax, &max_tmp);
     vst1q_s32(lst1 + i, vMin);
     i += 4;
-    if (bPos >= len2) {
-        memcpy(lst1 + i, lst0 + aPos, len1 + len2 - i);
-    }
+    vst1q_s32(lst1 + i, vMax);
+    i += 4;
+
+//    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "%d ?>= %d", i, lst2 - lst1 + len2);
     vst1q_s32(lst2 + len2, backup);
-    free(lst0);
+    */
 }
+
 
 void combsort_intrinsics_int_detail(int * lst, int len) {
 
@@ -192,6 +236,10 @@ void combsort_intrinsics_int_detail(int * lst, int len) {
         finished = 1;
         for (i = 0; i < l - 1; i++) {
             finished &= vertor_cmpswap_bool(&arr[i], &arr[i + 1]);
+            if (finished == 0) break;
+        }
+        for (i = 0; i < l - 1; i++) {
+            vertor_cmpswap(&arr[i], &arr[i + 1]);
         }
         finished &= vertor_cmpswap_skew_bool(&arr[l - 1], &arr[0], &max_vec);
     }
@@ -257,19 +305,6 @@ inline void vertor_cmpswap_f_skew(float32x4_t *a, float32x4_t  *b, float32x4_t *
     *b = vextq_f32(tmp_t, tmp_b, 3);
 }
 
-inline void vertor_merge_f(float32x4_t *vMin, float32x4_t *vMax, float32x4_t *max_tmp) {
-    float min = -INT_MAX;
-    vertor_cmpswap_f(vMin, vMax);
-    float32x4_t vMin_tmp = vextq_f32(*vMin, *max_tmp, 2); // => (b2,b3,m,m)
-    float32x4_t vMin_tmp2 = vextq_f32(*max_tmp, *vMin, 2); // => (m,m,b0,b1)
-    vertor_cmpswap_f(vMax, &vMin_tmp);
-    vMin_tmp = vextq_f32(vMin_tmp2, vMin_tmp, 3); // => (b1,b2,b3,min)
-    vMin_tmp = vld1q_lane_f32(&min, vMin_tmp, 3);
-    vMin_tmp2 = vextq_f32(vMin_tmp, vMin_tmp2, 3);  // => (m,m,m,b0)
-    vertor_cmpswap_f(&vMin_tmp, vMax);
-    *vMin = vextq_f32(vMin_tmp2, vMin_tmp, 3);
-}
-
 inline sort_vector_f(float* v, int n) {
     int i = 0;
     while (i < n - 1) {
@@ -288,9 +323,9 @@ inline sort_vector_f(float* v, int n) {
 }
 
 void combsort_intrinsics_float(float * lst, int len) {
-    if (len > CACHE_LINE) {
+    if (len * LANES_FLOAT_NUM > CACHE_LINE) {
         int l = ((len / 2 + 3) >> 2) << 2, i;
-        if (l < CACHE_LINE) {
+        if (l * LANES_FLOAT_NUM < CACHE_LINE) {
 #pragma omp parallel for
             for (i = 0; i < 2; i++) {
                 int add = (i == 0) ? 0 : l;
@@ -308,41 +343,28 @@ void combsort_intrinsics_float(float * lst, int len) {
         combsort_intrinsics_float_detail(lst, len);
     }
 }
+
+
 void combsort_intrinsics_float_merge(float * lst1, int len1, float * lst2, int len2) {
 
     float* lst0 = (float*)malloc(len1 * sizeof(float));
     memcpy(lst0, lst1, len1 * sizeof(float));
+
     int aPos = 0, bPos = 0, i = 0;
-    float32x4_t vMin = vld1q_f32(lst1);
-    float32x4_t vMax = vld1q_f32(lst2);
-    float32x4_t backup = vld1q_f32(lst2 + len2);
-    float32x4_t max_tmp = vdupq_n_f32(INT_MAX);
-    aPos = aPos + 4;
-    bPos = bPos + 4;
-//    if (len2 & 0x03 != 0) { // switch the leftover to INT_MAX
-    vst1q_f32(lst2 + len2, max_tmp);
-//    }
     while (aPos < len1 && bPos < len2) {
-        vertor_merge_f(&vMin, &vMax, &max_tmp);
-        vst1q_f32(lst1 + i, vMin);
-        i += 4;
-        if (lst0[aPos] <= lst2[bPos]) {
-            vMin = vld1q_f32(lst0 + aPos);
-            aPos += 4;
+        if (lst0[aPos] < lst2[bPos]) {
+            lst1[i++] = lst0[aPos++];
         }
         else {
-            vMin = vld1q_f32(lst2 + bPos);
-            bPos += 4;
+            lst1[i++] = lst2[bPos++];
         }
     }
-    vertor_merge_f(&vMin, &vMax, &max_tmp);
-    vst1q_f32(lst1 + i, vMin);
-    i += 4;
-    if (bPos >= len2) {
-        memcpy(lst1 + i, lst0 + aPos, len1 + len2 - i);
+
+    if (aPos < len1) {
+        memcpy(lst1 + i, lst0 + aPos, (len1 - aPos) * sizeof(float));
     }
-    vst1q_f32(lst2 + len2, backup);
     free(lst0);
+
 }
 
 void combsort_intrinsics_float_detail(float * lst, int len) {

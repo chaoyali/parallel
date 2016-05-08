@@ -24,7 +24,7 @@ public class FaCollection {
         for (int i = 0; i < 16; i++) {
             s += real[i] + " + i" + imag[i] + "\n";
         }
-        return "Hello from neon collection\n" + s;
+        return "Hello from neon collection\n" + sort_int_test() + s;
     }
 
     // Java interface
@@ -211,6 +211,7 @@ public class FaCollection {
 
     // For testing
     private static native String fft_float_test(float[] real, float[] imag, int len);
+    private static native String sort_int_test();
     private static native void sort_int_c(int[] array, int len);
     private static native void fft_float_c(float[] real, float[] imag, int len, int reverse);
 
