@@ -7,12 +7,12 @@ We create two neon-based libraries for android developers.
 1. Matrix Library called FaMatrix. The library contains most useful matrix operations, including matrix transpose, addition, and multiplication. The library support short, int and float data types.
 2. Basic Tools Library called FaCollection. This is a basic library and provide three basic tools, including vectorized calculation, sort and fast fourier transform.
 
-More information can be found in our ["website"](http://chaoyali.github.io/parallel/)
+More information can be found in our [website](http://chaoyali.github.io/parallel/)
 
 
 ## Implementation
 
-We build an environment for android NDK developing. All C/NEON code can be found in the ["this address"](https://github.com/chaoyali/parallel/tree/master/neoncore/src/main/jni)
+We build an environment for android NDK developing. All C/NEON code can be found in the [this address](https://github.com/chaoyali/parallel/tree/master/neoncore/src/main/jni)
 
 
 ## Performance
@@ -27,6 +27,6 @@ Coming Soon...
 
 ## How to Import it
 
-We generate .aar file in ["this address"](https://github.com/chaoyali/parallel/tree/master/neoncore/aar).
+We generate .aar file in [this address](https://github.com/chaoyali/parallel/tree/master/neoncore/aar).
 
 You can simple download it and imported it into Android Studio project. You can use it according to the documents. It can also be used in non-NEON device because it can make use of serial C code if the NEON code is unavailable.
