@@ -7,7 +7,7 @@
         <li>Basic Tools Library called FaCollection. This is a basic library and provide three basic tools, including vectorized calculation, sort and fast fourier transform.</li>
         <br> Based on our our library, we develop a android graphic application to showcase our works. The first application we developed is a rotating points. Here we randomly generate some points in 3D space and then show their projection on X-Y Flat in the screen. Then we use FaMatrix to calculate the next location of these points and then draw their projections again. Finally, we can show a dynamic processing of rotating points.
         <br><br>
-        <img height="400px" src="images/pic11.jpg" style="
+        <img height="600px" src="images/pic11.jpg" style="width:400px;
 	      display: block;
 	      margin: auto;" />
 	    <center><var>Pic 1.1 Rotating Point Application</var></center>
@@ -63,6 +63,7 @@
 	      margin: auto;" />
         <center><var>Pic 3.4 Interleaving Two Lanes using VZIP</var></center>
     </p>
+
     <h4>Matrix Multiplication</h4>
     <p>
         Matrix multiplication is widely used in many applications. So we decided to make improvements on that. As we all know, the naive matrix multiplication is like this:
@@ -92,6 +93,23 @@
         <br>
         <br> Within the block, we use SIMD to parallelize the operation, as shown in pic. 3.6. The expected speedup is 4 time faster than blocked C version multiplication.
         <br>
+        <pre><code>
+for (iblock = 0; iblock &lt; m_a; iblock += BLOCK_M)
+    for (jblock = 0; jblock &lt; n_b; jblock += BLOCK_N)
+        for (kblock = 0; kblock &lt; n_a; kblock += BLOCK_K) {
+            for (i = 0; i &lt; BLOCK_M; i++) {
+                for (j = 0; j &lt; BLOCK_N/LANES_INT_NUM; j++) {
+                    float32x4_t sum_vect = vdupq_n_f32(0);
+                    for (k = 0; k &lt; BLOCK_K; k++) {
+                        float32x4_t a_vec = vdupq_n_f32(a[(i + iblock) * n_a + (k + kblock)]);
+                        float32x4_t b_vec = vld1q_f32(b + (k + kblock) * n_b + (j * LANES_INT_NUM + jblock));
+                        sum_vect = vmlaq_f32(sum_vect, a_vec, b_vec);
+               }
+               float32x4_t oldresult = vld1q_f32(result + (i + iblock) * n_b + (j * LANES_INT_NUM + jblock));
+               vst1q_f32(result + (i + iblock) * n_b + (j * LANES_INT_NUM + jblock), vaddq_f32(oldresult, sum_vect));
+   }
+} 
+</code></pre>
         <br> We could carefully deal with the leftover to approach the expected speedup. The main goal is to fully utilize the neon lanes.
         <br><br>
         <img src="images/pic37.png" style="width:400px;
@@ -117,7 +135,7 @@
     </p>
 
 
-    
+
     <h4>Point-Value Representation of A Function</h4> This is a basic function we did with neon. Point-value representation is a processing of calculate the y given x and a function f, that is, y = f(x).
     <br> If we need to put multiple same instruction to a set of value {x}, this function will be extremely useful. The basic processing of using neon to calculate the point value is like Figure 3.10.
     <br><br>
@@ -314,22 +332,49 @@
       margin: auto;" />
     <center><var>Pic 3.18 Performance of FFT</var></center>
     <br>
-    <br> Here we finished all the functions in FaCollection. Because of hardware reason, we meet some problem in detecting the energy consumption. We will analysis our energy consumption situation in two days.
+    <br> Here we finished all the functions in FaCollection. We will analysis our energy consumption situation in two days.
 
     <br>
 
 <h4>Result</h4>
+<p>
+
+	For the matrix operation part, we test the runtime of matrix multiplication and transpose. Pic xxx shows the run time for matrix transpose tested with 1000*1000 matrix. The neon version transpose is 8.9x to Java version, 1.5x to C version. One might ask why the speedup is not 4.  The expected speedup to C is not 4x, since in this situation there is only data movement, neon lanes are used for improve the cache performance, not used for multi-calculation.
+
 	<br><br>
     <img src="images/pic1000.png" style="width:400px;
       display: block;
       margin: auto;" />
     <center><var>Pic Transpose</var></center>
 
+    <br><br>
+
+    Another part of the test is matrix multiplication. Pic xxx shows the run time for matrix multiplication tested with 500*500 matrix. The neon version multiplication is 14.6x to Java version, 4.1x to C naive version, 3.1x to C blocked version, 1.2x to neon v1. The C naive version is the C version implementation without cache performance improvement. The C blocked version is C version, using block to improve cache performance. The neon version is based on the blocked C version. Neon V1 version is the neon version without improving the leftover element. Neon version is the neon version that improve the leftover performance as shown in previous.
+
+    <br><br>
+
+    The expected speedup of multiplication is 8x, but we only achieve 3.1x speedup to C blocked version in samsung i9300. One reason is that there are still some sequential part in leftover element. Another reason is the memory bound. Memory is the bottleneck the the performance.
+
+	<br><br>
+
+	We also find that method for dealing leftover in Pic 3.9.1 cannot make good improvement. The run time for this method is quite similar to C version. We find the slow part is the result data gathering from one lane (The final result is the sum of four data in one lane). Neon does not have specific function to deal with gathering data from one lane, so we implement that by ourselves, which is the bottleneck of this method.
+
+
    <br><br>
     <img src="images/pic1001.png" style="width:400px;
       display: block;
       margin: auto;" />
     <center><var>Pic Multiplication</var></center>
+
+    <br><br>
+
+    We test this part of code and got the average run time is shown in Pic 3.16. It can faster than serial version of combsort in c and sort api in java, it can also run as fast as quicksort in C.
+
+
+
+</p>
+
+
 
 
 
