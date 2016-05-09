@@ -245,6 +245,10 @@ Java_fastandroid_neoncore_collection_FaCollection_fft_1float_1test(JNIEnv *env, 
     char buffer[1024] = "hello fft\n";
     char* str;
 
+    if (can_use_neon()) {
+        buffer[1024] = "No neon available in this device. But you can still use our api.\n";
+        return (*env)->NewStringUTF(env, buffer);
+    }
 #ifdef HAVE_NEON
     for (i = 10; i < 20; i++) {
 
@@ -308,6 +312,10 @@ Java_fastandroid_neoncore_collection_FaCollection_sort_1int_1test(JNIEnv *env, j
     int i;
     char buffer[1024] = "hello sort\n";
     char* str;
+    if (can_use_neon()) {
+        buffer[1024] = "No neon available in this device. But you can still use our api.\n";
+        return (*env)->NewStringUTF(env, buffer);
+    }
 #ifdef HAVE_NEON
     for (i = 18; i < 23; i++) {
 
@@ -383,6 +391,10 @@ Java_fastandroid_neoncore_collection_FaCollection_vector_1int_1test(JNIEnv *env,
     int i;
     char buffer[1024] = "hello vector\n";
     char* str;
+    if (can_use_neon()) {
+        buffer[1024] = "No neon available in this device. But you can still use our api.\n";
+        return (*env)->NewStringUTF(env, buffer);
+    }
 #ifdef HAVE_NEON
     for (i = 0; i < 50; i+=5) {
 

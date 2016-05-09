@@ -50,7 +50,7 @@ public class FaCollection {
                 array[i] = ia[i];
             }
         }
-        if (array[0] instanceof Float && vars[0] instanceof Float) {
+        else if (array[0] instanceof Float && vars[0] instanceof Float) {
             float[] ia = new float[array.length], ir = new float[vars.length];
             for (int i = 0; i < array.length; i++) {
                 ia[i] = ((Float)array[i]).floatValue();
@@ -61,7 +61,9 @@ public class FaCollection {
                 array[i] = ia[i];
             }
         }
-        return;
+        else {
+            System.err.println("Error. We current do not support the input type in vector.");
+        }
     }
 
     public static void vector_int32(int[] array, int[] vars) {
@@ -84,7 +86,21 @@ public class FaCollection {
             qsort_int(ia, array.length);
             for (int i = 0; i < array.length; i++) array[i] = ia[i];
         }
-        return;
+        else if (array[0] instanceof Float) {
+            float[] ia = new float[array.length];
+            for (int i = 0; i < array.length; i++) ia[i] = ((Float)array[i]).floatValue();
+            qsort_float(ia, array.length);
+            for (int i = 0; i < array.length; i++) array[i] = ia[i];
+        }
+        else if (array[0] instanceof Double) {
+            double[] ia = new double[array.length];
+            for (int i = 0; i < array.length; i++) ia[i] = ((Double)array[i]).doubleValue();
+            qsort_double(ia, array.length);
+            for (int i = 0; i < array.length; i++) array[i] = ia[i];
+        }
+        else {
+            System.err.println("Error. We current do not support the input type in qsort.");
+        }
     }
 
     public  static void qsort_int32(int[] array) {
@@ -127,7 +143,9 @@ public class FaCollection {
             qsort_double(ia, array.length);
             for (int i = 0; i < array.length; i++) array[i] = ia[i];
         }
-        return;
+        else {
+            System.err.println("Error. We current do not support the input type in sort.");
+        }
     }
 
     public  static void sort_float32(float[] array) {
@@ -162,11 +180,15 @@ public class FaCollection {
                 imag[i] = ai[i];
             }
         }
-        return;
+        else {
+            System.err.println("Error. We current do not support the input type in fft.");
+        }
     }
 
     public static void fft_float32(float[] real, float[] imag) {
-        if (real.length != imag.length) return; // throw error
+        if (real.length != imag.length) {
+            return;
+        }
 
         int len = real.length;
         int m = (int) (Math.log(len) / Math.log(2));
@@ -176,7 +198,10 @@ public class FaCollection {
     }
 
     public static void fft_float32_c(float[] real, float[] imag) {
-        if (real.length != imag.length) return; // throw error
+        if (real.length != imag.length) {
+            System.err.println("Error. The length for FFT much be power of 2.");
+            return;
+        }
 
         int len = real.length;
         int m = (int) (Math.log(len) / Math.log(2));
@@ -205,7 +230,9 @@ public class FaCollection {
                 imag[i] = ai[i];
             }
         }
-        return;
+        else {
+            System.err.println("Error. We current do not support the input type in ifft.");
+        }
     }
 
     public static void ifft_float32(float[] real, float[] imag) {

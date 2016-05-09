@@ -152,6 +152,21 @@ public class FaMatrix {
         result.setN(b.getN());
     }
 
+    public static void matrix_mul_float_seq(MatrixFloat a, MatrixFloat b, MatrixFloat result) {
+        // check format
+        if (a.getN() != b.getM()) {
+            System.err.println("Error. These two MatrixInt cannot be multiplied.");
+        }
+        if (a.getM() < 1 || a.getN() < 1 || b.getM() < 1 || b.getN() < 1) {
+            System.err.println("Error. Size error.");
+        }
+
+        matrix_float_mul_sequential(a.getData(), a.getM(), a.getN(), b.getData(), b.getM(), b.getN(), result.getData());
+
+        result.setM(a.getM());
+        result.setN(b.getN());
+    }
+
     public static void matrix_mul_float(MatrixFloat a, MatrixFloat b, MatrixFloat result) {
         // check format
         if (a.getN() != b.getM()) {
