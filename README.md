@@ -23,9 +23,9 @@ In FaCollection, the calculation of points variables can run as fast as 2.2x tha
 
 Besides of the speedup of several useful algorithms, we also re-organize the data flow of FFT and make it better for data locality and can be use for SIMD easily. As far as we know, we do not have an implementation like it so far.
 
-## Online Document
+## API Document
 
-Coming Soon...
+We write a document to describe our api for users at [this address](https://github.com/chaoyali/parallel/tree/master/neoncore/docs).
 
 ## How to Import it
 
