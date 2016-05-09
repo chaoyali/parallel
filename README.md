@@ -19,7 +19,7 @@ We build an environment for android NDK developing. All C/NEON code can be found
 
 In FaMatrix library, the matrix multiplication achieves 14.6x speedup to Java version, 4.1x to C version multiplication. The transpose can achieve 8.9x to Java version, and 1.5x to C version.
 
-In FaCollection, the calculation of points variables can run as fast as 2.2x than serial code in C, the sorting algorithm can run 5x - 7x faster than official java code and 1.7x faster than comsort code in c, and 1.1x - 1.3x faster than quicksort code in C, FFT can run 15x - 30x faster than Java implementation and 1.2x - 1.5x faster than same implementation on C code.
+In FaCollection, the calculation of points variables can run as fast as 2.2x than serial code in C, the sorting algorithm can run 5x - 7x faster than official java code and 2.2x faster than comsort code in c, and 1.1x - 1.3x faster than quicksort code in C, FFT can run 15x - 30x faster than Java implementation and 1.2x - 1.5x faster than same implementation on C code.
 
 Besides of the speedup of several useful algorithms, we also re-organize the data flow of FFT and make it better for data locality and can be use for SIMD easily. As far as we know, we do not have an implementation like it so far.
 
