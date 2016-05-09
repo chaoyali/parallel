@@ -6,26 +6,6 @@ package fastandroid.neoncore.collection;
 public class FaCollection {
 
     // TEST FUNCTION
-    public static String test_fft()
-    {
-//        int len = 2<<16;
-//        float[] real = new float[len];
-//        float[] imag = new float[len];
-//        for (int i = 0; i < len; i++) {
-//            real[i] = (float)Math.sin(Math.toRadians(360 * i / 10));
-//            imag[i] = 0f;
-//        }
-//        String s = fft_float_test(real, imag, len) + "\n";
-//        for (int i = 0; i < 16; i++) {
-//            real[i] = (float)Math.sin(Math.toRadians(360 * i / 10));
-//            imag[i] = 0f;
-//        }
-//        fft_float(real,imag,16,0);
-//        for (int i = 0; i < 16; i++) {
-//            s += real[i] + " + i" + imag[i] + "\n";
-//        }
-        return fft_float_test();
-    }
 
     public static String test_vector() {
         return vector_int_test();
@@ -33,6 +13,11 @@ public class FaCollection {
 
     public static String test_sort() {
         return sort_int_test();
+    }
+
+    public static String test_fft()
+    {
+        return fft_float_test();
     }
 
 
@@ -115,14 +100,6 @@ public class FaCollection {
         qsort_double(array, array.length);
     }
 
-//    public static void csort(Object[] array) {
-//        if (array[0] instanceof Integer) {
-//            int[] ia = new int[array.length];
-//            for (int i = 0; i < array.length; i++) ia[i] = ((Integer)array[i]).intValue();
-//            sort_int_c(ia, array.length);
-//            for (int i = 0; i < array.length; i++) array[i] = ia[i];
-//        }
-//    }
 
     public static void sort(Object[] array) {
         if (array[0] instanceof Integer) {
@@ -195,19 +172,6 @@ public class FaCollection {
         if (len != 1<<m) return;
 
         fft_float(real, imag, len, 0);
-    }
-
-    public static void fft_float32_c(float[] real, float[] imag) {
-        if (real.length != imag.length) {
-            System.err.println("Error. The length for FFT much be power of 2.");
-            return;
-        }
-
-        int len = real.length;
-        int m = (int) (Math.log(len) / Math.log(2));
-        if (len != 1<<m) return;
-
-        fft_float_c(real, imag, len, 0);
     }
 
     public static void ifft(Object[] real, Object[] imag) {
