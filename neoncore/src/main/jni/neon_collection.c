@@ -242,13 +242,13 @@ Java_fastandroid_neoncore_collection_FaCollection_fft_1float_1test(JNIEnv *env, 
                                                                    jfloatArray real_, jfloatArray imag_,
                                                                    jint len) {
     int i;
-    char buffer[1024] = "hello fft\n";
     char* str;
 
-    if (can_use_neon()) {
-        buffer[1024] = "No neon available in this device. But you can still use our api.\n";
+    if (!can_use_neon()) {
+        char buffer[1024] = "No neon available in this device. But you can still use our api.\n";
         return (*env)->NewStringUTF(env, buffer);
     }
+    char buffer[1024] = "hello fft\n";
 #ifdef HAVE_NEON
     for (i = 10; i < 20; i++) {
 
@@ -310,12 +310,12 @@ JNIEXPORT jstring JNICALL
 Java_fastandroid_neoncore_collection_FaCollection_sort_1int_1test(JNIEnv *env, jclass type) {
 
     int i;
-    char buffer[1024] = "hello sort\n";
     char* str;
-    if (can_use_neon()) {
-        buffer[1024] = "No neon available in this device. But you can still use our api.\n";
+    if (!can_use_neon()) {
+        char buffer[1024] = "No neon available in this device. But you can still use our api.\n";
         return (*env)->NewStringUTF(env, buffer);
     }
+    char buffer[1024] = "hello sort\n";
 #ifdef HAVE_NEON
     for (i = 18; i < 23; i++) {
 
@@ -328,7 +328,7 @@ Java_fastandroid_neoncore_collection_FaCollection_sort_1int_1test(JNIEnv *env, j
         int* a1 = (int *) malloc(len * sizeof(int));
         int* a2 = (int *) malloc(len * sizeof(int));
         int* a3 = (int *) malloc(len * sizeof(int));
-        int j, iter, iter_num = 5;
+        int j, iter, iter_num = 4;
         __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "FirstHERE!!!!");
 
         for (iter = 0; iter < iter_num; iter++) {
@@ -389,12 +389,12 @@ JNIEXPORT jstring JNICALL
 Java_fastandroid_neoncore_collection_FaCollection_vector_1int_1test(JNIEnv *env, jclass type) {
 
     int i;
-    char buffer[1024] = "hello vector\n";
     char* str;
-    if (can_use_neon()) {
-        buffer[1024] = "No neon available in this device. But you can still use our api.\n";
+    if (!can_use_neon()) {
+        char buffer[1024] = "No neon available in this device. But you can still use our api.\n";
         return (*env)->NewStringUTF(env, buffer);
     }
+    char buffer[1024] = "hello vector\n";
 #ifdef HAVE_NEON
     for (i = 0; i < 50; i+=5) {
 
