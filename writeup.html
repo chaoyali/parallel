@@ -14,10 +14,49 @@
     </p>
     <br>
 
+	<h3>Background</h3>
+		In this part, we will talk about the both of the environment of our platform and our basic (serial) algorithms. 
+
+		<br><br>
+
+		For the environment, we choose Android smartphones (Nexus 4 & Samsung i9300) for our experience. We make use of NDK toolset to implement our code in native-code languages C. We setup our environment with Android Studio and develop our application based on sample code provided by google (https://github.com/googlesamples/android-ndk). Finally, we pack our code using Android Studio, too.
+
+		<br><br>
+
+		Then we will introduce our basic algorithms. 
+
+		<br><br>
+
+		One algorithm we implemented is sorting algorithm. In our implementation, sorting is an process of arranging data (in an array) in ascending order. The input of sorting algorithm is an array and its output is an array sorted in place. The most common sorting algorithm is quicksort, which can make use of multiple core but not SIMD instructions. Lucky there are some good algorithm for SIMD implementation based on combsort.
+
+		<br><br>
+
+		Another algorithm we implemented is Fast Fourier Transform (FFT). This is an classic algorithm which is important in signal processing, image processing, multiplication of polynomials and so on. It can be implemented through hardware sometime, but the software implementation is still very important. An good example is FFTW, a known as the fastest free software implementation of the FFT. Here we refer to the code in Introduction to Algorithm. Its basic data flow is hard for SIMD, so we try to change it to another form, which will be talked in section “approach”.
+		
+		<br><br>
+
+		We also implement matrix operations, improving both in cache performance and calculation speed. We will introduce them latter.
+
+		<br><br>
+
+    <h3>Contribution</h3>
+
+		In FaMatrix library, the matrix multiplication achieves 14.6x speedup to Java version, 4.1x to C version multiplication. The transpose can achieve 8.9x to Java version, and 1.5x to C version.
+
+		<br><br>
+
+		In FaCollection, the calculation of points variables can run as fast as 2.2x than serial code in C, the sorting algorithm can run 5x - 7x faster than official java code and 1.7x faster than comsort code in c, and 1.1x - 1.3x faster than quicksort code in C, FFT can run 15x - 30x faster than Java implementation and 1.2x - 1.5x faster than same implementation on C code.
+
+		<br><br>
+
+		Besides of the speedup of several useful algorithms, we also re-organize the data flow of FFT and make it better for data locality and can be use for SIMD easily. As far as we know, we do not have an implementation like it so far.
+
+		<br><br>
 
 
     <h3>Approach</h3>
-    <!--<ul style="list-style: none;">-->
+
+	We implementation our algorithm based on c language and NEON instructions.
     <h4>Matrix Transpose</h4>
     <p>
         Neon lanes can be used to improve the cache performance of matrix transpose operation. For naive version matrix operation, we can simply use result[j][i] = matrix[i][j] to achieve our goal. But since we take big steps when storing result, the cache will alway miss. To improve the cache hit rate, we use the following algorithm to calculate matrix transpose operation using Neon.
@@ -135,13 +174,13 @@ for (iblock = 0; iblock &lt; m_a; iblock += BLOCK_M)
 
         <br><br>
 
-        For the Pic 3.7 Leftover in N, although some of the leftover can fit into the SIMD, there are still parts of data cannot fit into SIMD, since the N dimension of leftover is too small. For example, if N dimension of block is 32, and dimension of leftover matrix is 5, then the last 1 column of data cannot fit into NEON lanes. To solve that, we came up a solution as shown below. We firstly calculate the element that cannot can fit into lanes. Then, for the remaining part, we transpose that part, so that it can fit into the SIMD lanes, as shown in Pic 3.9.1.
+        For the Pic 3.7 Leftover in N, although some of the leftover can fit into the SIMD, there are still parts of data cannot fit into SIMD, since the N dimension of leftover is too small. For example, if N dimension of block is 32, and dimension of leftover matrix is 5, then the last 1 column of data cannot fit into NEON lanes. To solve that, we came up a solution as shown below. We firstly calculate the element that cannot can fit into lanes. Then, for the remaining part, we transpose that part, so that it can fit into the SIMD lanes, as shown in Pic 3.10.
 
         <br><br>
-        <img src="images/pic39p.png" style="width:400px;
+        <img src="images/pic310.png" style="width:400px;
 	      display: block;
 	      margin: auto;" />
-        <center><var>Pic 3.9.1 Deal with Leftover that cannot fit into NEON lane</var></center>
+        <center><var>Pic 3.10 Deal with Leftover that cannot fit into NEON lane</var></center>
         <br>
         <br>
 
@@ -150,144 +189,127 @@ for (iblock = 0; iblock &lt; m_a; iblock += BLOCK_M)
 
 
 
-    <h4>Point-Value Representation of A Function</h4> This is a basic function we did with neon. Point-value representation is a processing of calculate the y given x and a function f, that is, y = f(x).
-    <br> If we need to put multiple same instruction to a set of value {x}, this function will be extremely useful. The basic processing of using neon to calculate the point value is like Figure 3.10.
-    <br><br>
-    <img src="images/pic310.jpg" style="width:500px;
-      display: block;
-      margin: auto;" />
-    <center><var>Pic 3.10 Data Flow of Calculating Point-Value Representation</var></center>
-    <br>
-    <br> For the left points, if the total length of vector is not multiple of 4, we can simple use overlap to calculate the leftover.
-    <br><br>
-    <img src="images/pic311.jpg" style="width:400px;
-      display: block;
-      margin: auto;" />
-    <center><var>Pic 3.11 Deal with Leftover on Calculating Point-Value Representation</var></center>
-    <br>
-    <br> So we will do only one more time of calculation with left points.
+    <h4>Point-Value Representation of A Function</h4>
+	    This is a basic implementation we did with neon. Point-value representation is a processing of calculate the y given x and a function f, that is, y = f(x). If we have multiple value of x and the same function f, it can be simply speedup with NEON.
+		<br>The basic processing of using neon to calculate the point value is like Pic 3.10.
+	    <br><br>
+	    <img src="images/pic311.jpg" style="width:500px;
+	      display: block;
+	      margin: auto;" />
+	    <center><var>Pic 3.11 Data Flow of Calculating Point-Value Representation</var></center>
+	    <br>
+	    <br> For the leftover points, if the total length of vector is not multiple of 4, we can simple use overlap to calculate the them twice. Both of them are loaded with the initialized value. See Pic 3.11 for explanation.
+	    <br><br>
+	    <img src="images/pic312.jpg" style="width:400px;
+	      display: block;
+	      margin: auto;" />
+	    <center><var>Pic 3.12 Deal with Leftover on Calculating Point-Value Representation</var></center>
+	    <br>
+	    <br> So we will do only one more time of calculation with left points. If we have N points, the total load and store we use is (N + 3) >> 2. The theoretical ideal speedup of using NEON is 4x, assuming the executing time of NEON is as same as C code and the length of vector is four.
 
 
 
 
-    <h4>Align Access Sort</h4> Align Access Sort (AA-Sort) is parallel sorting algorithm for multi-core SIMD processors. In this paper, the author want to use SIMD to reduce the number of conditional branches in their programs. In this algorithm, the author come up with an in-core algorithm and an out-core algorithm.
-    <br>
-    <br> The overall AA-sort is: (1) Divide all of the data into blocks that fit into the cache of the processor. (2) Sort each block with the in-core sorting algorithm. (3) Merge the sorted blocks with the out-of-core algorithm. It’s shown that the complexith of AA-Sort is O(N logN).
-    <br>
-    <br> The in-core algorithm of AA-sort improves on combsort, an extension to bubble sort. Figure X show the basic processes of combsort algorithm. It compare the values with gaps and the shrick the gap. Finally, it use bubble sort to sort the vector.
-    <br><br>
-    <img src="images/pic312.jpg" style="width:400px;
-      display: block;
-      margin: auto;" />
-    <center><var>Pic 3.12 Data Flow of Combsort</var></center>
-    <br>
-    <br> As for the in-core algorithm, the author come up with two operation, that is vector_cmpswap(A, B) and vector_cmpswap_skew(A, B). Then the pseudo code of this algorithm is
+	    <h4>Align Access Sort</h4> Align Access Sort (AA-Sort) is parallel sorting algorithm for multi-core SIMD processors. In this paper,  the author want to use SIMD to reduce the number of conditional branches in their programs. To make it, the author come up with an in-core algorithm and an out-core algorithm. However,  the out-core algorithm needs a vector permutation operation, which is not supported by NEON, so we decided to replace it with merge sort. 
+	    <br>
+	    <br> The overall implementation of AA-sort is similar to use merge sort to divide blocks and use incore sort to sorting the blocks. First of all, we should divide all of the data into blocks that fit into the cache of the processor, we check each blocks and then divided to two smaller blocks if it bigger than size of cache. This reasonable blocking can help making advantage of locality.
+	    <br>
+	    <br> Then we use AA in-core sort to sort each block, this is the main part of our algorithm and can be run under multiple processors. Finally, we use merge sort to sort the neighbored blocks. 
+		<br>
+		<br>In sorting each block, we making use of openMP to speedup since the smartphone have four cores. But the speedup is a little. To find the reason, we think that is because each algorithm are using the vector operation, but we only have limited vector operators.
+		<br>
+		<br>In the left words of this subpart, we mainly talking about the in-core algorithm and its implementation.
+	    <br>
+	    <br> The in-core algorithm of AA-sort improves based on combsort, an extension to bubble sort. Pic 3.13 show the basic processes of combsort algorithm. It compare the values with gaps and then shrink the gap. Finally, it use bubble sort to sort the vector until the array is sorted. The basic data flow is shown in Pic 3.13. The time complexity of this algorithm is O(N logN).
+	    <br><br>
+	    <img src="images/pic313.jpg" style="width:400px;
+	      display: block;
+	      margin: auto;" />
+	    <center><var>Pic 3.13 Data Flow of Combsort</var></center>
+	    <br>
+	    <br> As for the in-core algorithm, we group four numbers (assuming the length of vector is four) together and then compare the vector after a gap. What’s more, we should compare the last vectors with the initial vectors with the skew of points. The pseudo code of this algorithm is
 
-	<pre><code>
-	gap = (N/4) / SHRINK_FACTOR;
-	while (gap > 1) {
-	    /* straight comparisons */
-	    for (i = 0; i &lt; N/4 - gap; i++)
-	        vector_cmpswap(va[i], va[i+gap]);
+		<pre><code>
+		gap = (N/4) / SHRINK_FACTOR;
+		while (gap > 1) {
+		    /* straight comparisons */
+		    for (i = 0; i &lt; N/4 - gap; i++)
+		        vector_cmpswap(va[i], va[i+gap]);
 
-	    /* skewed comparisons */
-	    /* when i+gap exceeds N/4 */
-	    for (i = N/4 - gap; i &lt; N/4; i++)
-	        vector_cmpswap_skew(va[i], va[i+gap - N/4]);
-	    /* dividing gap by the shrink factor */
-	    gap /= SHRINK_FACTOR;
-	}
-	do {
-	    for (i = 0; i &lt; N/4 - 1; i++)
-	        vector_cmpswap(va[i], va[i+1]);
-	    vector_cmpswap_skew(va[N/4-1], va[0]);
-	} while( not totally sorted );
-	</code></pre>
+		    /* skewed comparisons */
+		    /* when i+gap exceeds N/4 */
+		    for (i = N/4 - gap; i &lt; N/4; i++)
+		        vector_cmpswap_skew(va[i], va[i+gap - N/4]);
+		    /* dividing gap by the shrink factor */
+		    gap /= SHRINK_FACTOR;
+		}
+		do {
+		    for (i = 0; i &lt; N/4 - 1; i++)
+		        vector_cmpswap(va[i], va[i+1]);
+		    vector_cmpswap_skew(va[N/4-1], va[0]);
+		} while( not totally sorted );
+		</code></pre>
 
-	Our implementation of vector_cmpswap(A, B) and vector_cmpswap_skew(A, B) is 
-	<pre><code>
-	void vertor_cmpswap(int32x4_t *a, int32x4_t  *b) 
-	{
-	    int32x4_t t = vminq_s32(*a, *b);
-	    *b = vmaxq_s32(*a, *b);
-	    *a = t;
-	}
+		In this code, the author come up with two operation, that is vector_cmpswap(A, B) and vector_cmpswap_skew(A, B). The  vector_cmpswap(A, B) is an operation that compares and swaps values in each element of the vector register A with the corresponding element of the vector register B.  vector_cmpswap_skew(A, B) is an operation that compares and swaps the first to third elements of the vector register A with the second to fourth elements of the vector register B. 
+		<br>
+		<br>Our implementation of vector_cmpswap(A, B) and vector_cmpswap_skew(A, B) is
 
-	void vertor_cmpswap_skew(int32x4_t *a, int32x4_t *b, int32x4_t *tmp) 
-	{	// tmp here is vector of INT_MAX
-	    int32x4_t tmp_t = vextq_s32(*tmp, *b, 1);    
-	    int32x4_t tmp_b = vextq_s32(*b, *tmp, 1);    
-	    vertor_cmpswap(a, &tmp_b);
-	    *b = vextq_s32(tmp_t, tmp_b, 3);
-	}
-	</code></pre>
-	<br> To deal with the leftover, we set some vectors with only 3 useful values at the end of this array, and the 4th length as the MAX value of this type. Take length = 10 as an example, the leftover is processed as Figure 3.13.
+		<pre><code>
+		void vertor_cmpswap(int32x4_t *a, int32x4_t  *b) 
+		{
+		    int32x4_t t = vminq_s32(*a, *b);
+		    *b = vmaxq_s32(*a, *b);
+		    *a = t;
+		}
 
-	<br><br>
-    <img src="images/pic313.jpg" style="width:400px;
-      display: block;
-      margin: auto;" />
-    <center><var>Pic 3.13 Deal with Overleft on AA Sort</var></center>
-    <br>
-    <br> After sort, the order of values is not ordered but needs us to put them into the right place. So we should put them back to right place. The final order and the we to put them back is shown in Figure 3.14.
-    <br><br>
-    <img src="images/pic314.jpg" style="width:400px;
-      display: block;
-      margin: auto;" />
-    <center><var>Pic 3.14 The final step of AA Sort</var></center>
-    <br>
-    <br> The out-core algorithm is make use of odd-even algorithm. We merge the vector one by one. The pseudo code is 
+		void vertor_cmpswap_skew(int32x4_t *a, int32x4_t *b, int32x4_t *tmp) 
+		{	// tmp here is vector of INT_MAX
+		    int32x4_t tmp_t = vextq_s32(*tmp, *b, 1);    
+		    int32x4_t tmp_b = vextq_s32(*b, *tmp, 1);    
+		    vertor_cmpswap(a, &tmp_b);
+		    *b = vextq_s32(tmp_t, tmp_b, 3);
+		}
+		</code></pre>
+		<br> It very important to choose the right SHRINK_FACTOR here, because a bigger SHRINK_FACTOR will lead to a faster shrink and leave too much at the bubble sort part. A too small shrink leads to a slow speed at first part. So we test some values and choose to set the SHRINK_FACTOR as 1.3, just as the paper’s choice.
 
-	<pre><code>
-	aPos = bPos = 0;
-	vMin = va[aPos++];
-	vMax = vb[bPos++];
+		<br>
+		<br>As for detecting whether totally sorted or not, we should check whether the list before change and after change is same. This operation is an important operation but needs lots of time because we implemented it serially. Even the official instruction is serial code so we did not find the good solution yet. 
 
-	while (aPos &lt; aEnd && bPos &lt; bEnd) {
-	    /* merge vMin and vMax */
-	    vector_merge(vMin, vMax);
+		<br>
+		<br>To deal with the leftover, we set some vectors with only 3 useful values at the end of this array, and the 4th length as the MAX value of this type. Take length = 10 as an example, the leftover is processed as Pic 3.14.
 
-	    /* store the smaller vector as output*/
-	    vMergedArray[i] = vMin;
+		<br><br>
+	    <img src="images/pic314.jpg" style="width:400px;
+	      display: block;
+	      margin: auto;" />
+	    <center><var>Pic 3.14 Deal with Overleft on AA Sort</var></center>
+	    <br>
+	    <br> After sort, the order of values is not ordered but needs us to put them into the right place. So we should put them back to right place. The final order and the way we to put them back is shown in Pic 3.15.
+	    <br><br>
+	    <img src="images/pic315.jpg" style="width:400px;
+	      display: block;
+	      margin: auto;" />
+	    <center><var>Pic 3.15 The final step of AA Sort</var></center>
+	    <br>
+	    <br> The out-core algorithm is make use of odd-even algorithm. Instead, we use merge sort to merge two sorted blocks. The time complexity is still O(N log N). 
+	    <br>
+	    <br>One important factor here is to set the right blocksize to fit the cache line. We will assign enough space for all the vectors so it will works better if the cache / register size can fit them in. Here we call it CACHE_LINE, and set it to 256 after the testing.
+	    <br>
+	    <br>In our implementation, we cut down the comparison but remain some serial code, and we have quicksort as another baseline, so the speedup is difficult to estimate. 
 
-	    /* load next vector and advance pointer */
-	    /* a[aPos*4] is first element of va[aPos]*/
-	    /* and b[bPos*4] is that of vb[bPos] */
-	    if (a[aPos*4] &lt; b[bPos*4])
-	        vMin = va[aPos++];
-	    else
-	        vMin = vb[bPos++];
-	}
-	</code></pre>
 
-	The data flow of vector merge operation is in Pic 3.15.
 
-	<br><br>
-    <img src="images/pic315.png" style="width:400px;
-      display: block;
-      margin: auto;" />
-    <center><var>Pic 3.15 Data Flow of Merging Two Vector</var></center>
-    <br>
-    <br> We test this part of code and got the average run time is shown in Pic 3.16. It can faster than serial version of combsort in c and sort api in java, it can also run as fast as quicksort in C.
+  	<h4>Fast Fourier Transform</h4> 
+  	A fast Fourier transform (FFT) algorithm computes the discrete Fourier transform (DFT) of a sequence, or its inverse. It manages to reduce the complexity of computing the DFT from O(n^2), which arises if one simply applies the definition of DFT, to O(N log N), where N is the data size. In this algorithm, N much equals to 2^x.
+  	<br>
+  	The basic implementation is learnt from Introduction of Algorithm Chapter 30. Although some devices have special circuit to calculate it, the fast implementation of FFT is still very important in some area (signal processing, image processing, multiplication of polynomials). The basic data flow is shown in Pic 3.16.
+
 
     <br><br>
     <img src="images/pic316.jpg" style="width:400px;
       display: block;
       margin: auto;" />
-    <center><var>Pic 3.16 Performance of AA Sort</var></center>
-    <br>
-    <br> In this Pic, the x asix is the log of the length of arrray. However, we design different n = 2^x + random (10) to test the leftover of our algorithm.
-
-  	<h4>Fast Fourier Transform</h4> A fast Fourier transform (FFT) algorithm computes the discrete Fourier transform (DFT) of a sequence, or its inverse. It manages to reduce the complexity of computing the DFT from O(n^2), which arises if one simply applies the definition of DFT, to O(n \log n), where n is the data size.
-  	<br>
-  	The basic implementation is learnt from Introduction of Algorithm Chapter 30. Although some devices have special circuit to calculate it, the fast implementation of FFT is still very important in some area (signal processing, image processing, multiplication of polynomials). The basic data flow is shown in Pic 3.17.
-
-
-    <br><br>
-    <img src="images/pic317.jpg" style="width:400px;
-      display: block;
-      margin: auto;" />
-    <center><var>Pic 3.17 Data Flow of FFT</var></center>
+    <center><var>Pic 3.16 Data Flow of FFT</var></center>
     <br>
     <br> Each line in this Pic is an adder and each W here is a multiplier before the adder. According to the Introduction of Algorithm, the pseudo code of FFT is
 
@@ -312,7 +334,18 @@ for (iblock = 0; iblock &lt; m_a; iblock += BLOCK_M)
 	    m = m &lt;&lt; 1
 	}</code></pre>
 
-    The REVERSE_BIT here is to calculate the reversed bit of each location and swap the value of them. This implementation is the directly representation of data flow of FFT. However, this implementation is extremely unfriendly for SIMD operation because we do not have any operation on continuous set of data. As a result, we change it to another form, which is hard for understanding but each for SIMD operations. The pseudo code of my implementation is
+    The REVERSE_BIT here is to calculate the reversed bit of each location and swap the value of them. This implementation is the directly representation of data flow of FFT. However, this implementation is extremely unfriendly for SIMD operation because we do not have any operation on continuous set of data.
+
+	As a result, we change it to another form. Its basic data flow is shown in Figure 3.17.
+
+	<br><br>
+    <img src="images/pic317.jpg" style="width:400px;
+      display: block;
+      margin: auto;" />
+    <center><var>Pic 3.17  New Data Flow of FFT</var></center>
+    <br>
+    <br> 
+
 
 	<pre><code>
 	m = 2
@@ -337,29 +370,23 @@ for (iblock = 0; iblock &lt; m_a; iblock += BLOCK_M)
 	}
 	</code></pre>
 
-    The run time of FFT shown in Pic 3.18. We compare the runtime of java version, c version and neon version with different length of signals. For the c version and java version, we also use the our implementation of FFT because it works better because of the locality.
+    Our implementation should work better than serial code because the implementation of SIMD.
 
-
-    <br><br>
-    <img src="images/pic318.jpg" style="width:400px;
-      display: block;
-      margin: auto;" />
-    <center><var>Pic 3.18 Performance of FFT</var></center>
     <br>
-    <br> Here we finished all the functions in FaCollection. We will analysis our energy consumption situation in two days.
+    <br> Here we finished all the functions in FaCollection.
 
     <br>
 
-<h4>Result</h4>
+<h3>Result</h3>
 <p>
 
 	For the matrix operation part, we test the runtime of matrix multiplication and transpose. Pic xxx shows the run time for matrix transpose tested with 1000*1000 matrix. The neon version transpose is 8.9x to Java version, 1.5x to C version. One might ask why the speedup is not 4.  The expected speedup to C is not 4x, since in this situation there is only data movement, neon lanes are used for improve the cache performance, not used for multi-calculation.
 
 	<br><br>
-    <img src="images/pic1000.png" style="width:400px;
+    <img src="images/pic41.png" style="width:500px;
       display: block;
       margin: auto;" />
-    <center><var>Pic Transpose</var></center>
+    <center><var>Pic 4.1 The Performance of Matrix Transpose</var></center>
 
     <br><br>
 
@@ -371,20 +398,41 @@ for (iblock = 0; iblock &lt; m_a; iblock += BLOCK_M)
 
 	<br><br>
 
-	We also find that method for dealing leftover in Pic 3.9.1 cannot make good improvement. The run time for this method is quite similar to C version. We find the slow part is the result data gathering from one lane (The final result is the sum of four data in one lane). Neon does not have specific function to deal with gathering data from one lane, so we implement that by ourselves, which is the bottleneck of this method.
+	We also find that method for dealing leftover in Pic 3.10 cannot make good improvement. The run time for this method is quite similar to C version. We find the slow part is the result data gathering from one lane (The final result is the sum of four data in one lane). Neon does not have specific function to deal with gathering data from one lane, so we implement that by ourselves, which is the bottleneck of this method.
 
 
    <br><br>
-    <img src="images/pic1001.png" style="width:400px;
+    <img src="images/pic42.png" style="width:500px;
       display: block;
       margin: auto;" />
-    <center><var>Pic Multiplication</var></center>
+    <center><var>Pic 4.2 The Performance of Matrix Multiplication</var></center>
 
+    <br>
+    <br>For FaCollection library, we test three tools separately. 
+    <br>
+    <br>At first, we test the vector operation using Samsung i9300. We can get about 2.2x speedup than same code in serial c version. The speedup stay stable with the num_var (the number of parameters) and the len_vec (length of vector). In this implementation, we only load each elements once (except the overlap with leftover), so the speedup (compared to C code) of this implementation should be the baseline of our other implementation for other algorithms with same algorithm. 
+    <br>
+    <br>We test AA sort in Nexus 4. We compared it with the combine sort in  C and official qsort in C. We got the average run time of different algorithm is shown in Pic 4.3. It can run 2.2x faster than serial version of combsort in c and 1.2x faster than quicksort. To make the figure more clear, I do not put the test of java version on the figure, and it can run about 6x faster than the Arrays.sort() in Java under my package.
     <br><br>
-
-    We test this part of code and got the average run time is shown in Pic 3.16. It can faster than serial version of combsort in c and sort api in java, it can also run as fast as quicksort in C.
-
-
+    <img src="images/pic43.jpg" style="width:500px;
+      display: block;
+      margin: auto;" />
+    <center><var>Pic 4.3 Performance of AA Sort</var></center>
+    <br>
+    <br>In this figure, the x asix is the log of the length of array. However, we design different n = 2^x + random (20) to test the leftover of our algorithm, and our implementation still works correctly. Compared to the 2.2x improvement of vector operations, we are surprise with this result. 
+	<br>
+	<br>We think some more serial code that is hard to improve with SIMD and more load-store operations, so this speedup (comparing to combsort) is pretty good, one reason can be we set the great SHRINK_FACTOR and CACHE_LINE to accelerate.
+	<br>
+	<br>Comparing to quicksort, we works pretty good and can beat quicksort a little. However, the performance of NEON version code can be seriously affected by hardware, with better vector operator, our codes should work better.
+	<br>
+	<br>We test FFT in Nexus 4 ,too. The average run time of FFT shown in Pic 4.4. We compare the runtime of java version, c version and neon version with different length of signals. For both of the C version and java version, we also use the our implementation of FFT because it works better with the better locality. The answer shows that our neon version can run 3x faster than java version and run 1.3 faster than serial c version.
+    <br><br>
+    <img src="images/pic44.jpg" style="width:500px;
+      display: block;
+      margin: auto;" />
+    <center><var>Pic 4.4 Performance of FFT</var></center>
+    <br>
+    <br>We accept this result but not very satisfied with that. To find the reason, we have too much load and store operation in this operations. But with the new form of FFT, it will be more space to optimize with OpenMP and other multi-core parallel methods. 
 
 </p>
 
@@ -393,7 +441,7 @@ for (iblock = 0; iblock &lt; m_a; iblock += BLOCK_M)
 
 
 
-<a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span class="octicon octicon-link"></span></a>References<a name="ref"></a></h3>
+<h3>References</h3>
     <ol type="1">
         <li>r1</li>
         <li>r2</li>
