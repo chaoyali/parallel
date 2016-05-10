@@ -2,10 +2,11 @@
     <h2>
 <a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span class="octicon octicon-link"></span></a><b>Writeup</b></h2>
     <h3>Summary</h3>
-    <p>We create two neon-based libraries for android developers.
+    <p>We create two neon-based libraries for android developers, which uses NEON to optimize. The introduction is
         <li>Matrix Library called FaMatrix. The library contains most useful matrix operations, including matrix transpose, addition, and multiplication. The library support short, int and float data types. </li>
         <li>Basic Tools Library called FaCollection. This is a basic library and provide three basic tools, including vectorized calculation, sort and fast fourier transform. The library support int and float data types.</li>
-        <br> Based on our our library, we develop a android graphic application to showcase our works. The first application we developed is a rotating points. Here we randomly generate some points in 3D space and then show their projection on X-Y Flat in the screen. Then we use FaMatrix to calculate the next location of these points and then draw their projections again. Finally, we can show a dynamic processing of rotating points.
+        <br>The API document can be get from <a href="https://github.com/chaoyali/parallel/tree/master/neoncore/docs"> here </a>, you can use our library by referencing it.
+        <br><br>Based on our our library, we develop a android graphic application to showcase our works. The first application we developed is a rotating points. Here we randomly generate some points in 3D space and then show their projection on X-Y Flat in the screen. Then we use FaMatrix to calculate the next location of these points and then draw their projections again. Finally, we can show a dynamic processing of rotating points.
         <br><br>
         <img height="600px" src="images/pic11.jpg" style="width:400px;
 	      display: block;
@@ -35,7 +36,7 @@
 		
 		<br><br>
 
-		We also implement matrix operations, improving both in cache performance and calculation speed. We will introduce them latter.
+		We also implement matrix operations, matrix transpose is IO intensive and matrix mulnipulation is compute intensive. We improved both in cache performance and calculation speed. We will introduce them latter.
 
 		<br><br>
 
@@ -380,7 +381,7 @@ for (iblock = 0; iblock &lt; m_a; iblock += BLOCK_M)
 <h3>Result</h3>
 <p>
 
-	For the matrix operation part, we test the runtime of matrix multiplication and transpose. Pic xxx shows the run time for matrix transpose tested with 1000*1000 matrix. The neon version transpose is 8.9x to Java version, 1.5x to C version. One might ask why the speedup is not 4.  The expected speedup to C is not 4x, since in this situation there is only data movement, neon lanes are used for improve the cache performance, not used for multi-calculation.
+	For the matrix operation part, we test the runtime of matrix multiplication and transpose. Pic 4.1 shows the run time for matrix transpose tested with 1000*1000 matrix. The neon version transpose is 8.9x to Java version, 1.5x to C version. One might ask why the speedup is not 4.  The expected speedup to C is not 4x, since in this situation there is only data movement, neon lanes are used for improve the cache performance, not used for multi-calculation.
 
 	<br><br>
     <img src="images/pic41.png" style="width:500px;
@@ -390,7 +391,7 @@ for (iblock = 0; iblock &lt; m_a; iblock += BLOCK_M)
 
     <br><br>
 
-    Another part of the test is matrix multiplication. Pic xxx shows the run time for matrix multiplication tested with 500*500 matrix. The neon version multiplication is 14.6x to Java version, 4.1x to C naive version, 3.1x to C blocked version, 1.2x to neon v1. The C naive version is the C version implementation without cache performance improvement. The C blocked version is C version, using block to improve cache performance. The neon version is based on the blocked C version. Neon V1 version is the neon version without improving the leftover element. Neon version is the neon version that improve the leftover performance as shown in previous.
+    Another part of the test is matrix multiplication. Pic 4.2 shows the run time for matrix multiplication tested with 500*500 matrix. The neon version multiplication is 14.6x to Java version, 4.1x to C naive version, 3.1x to C blocked version, 1.2x to neon v1. The C naive version is the C version implementation without cache performance improvement. The C blocked version is C version, using block to improve cache performance. The neon version is based on the blocked C version. Neon V1 version is the neon version without improving the leftover element. Neon version is the neon version that improve the leftover performance as shown in previous.
 
     <br><br>
 
