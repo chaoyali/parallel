@@ -433,8 +433,9 @@ for (iblock = 0; iblock &lt; m_a; iblock += BLOCK_M)
       margin: auto;" />
     <center><var>Pic 4.4 Performance of FFT</var></center>
     <br>
-    <br>We accept this result but not very satisfied with that. To find the reason, we have too much load and store operation in this operations. But with the new form of FFT, it will be more space to optimize with OpenMP and other multi-core parallel methods. 
-
+    <br>We accept this result but not very satisfied with that. To find the reason, we have too much load and store operation in this operations, but if we open a big enough space for all the vectors, the vectors may not be stored in memory. In the other hand, with the new form of FFT, it will be more space to optimize with OpenMP and other multi-core parallel methods. 
+    <br>
+    <br>We do not test the smaller size of problem set because our algorithm running really faster. With smaller problem set, the precision is limited and the counting time of running algorithm vary a lot so it cannot show the speedup of our improvements.
 </p>
 
 
