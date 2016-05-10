@@ -3,11 +3,53 @@
 //
 
 #include "neon_matrix_intrinsics.h"
-#include "macro_define.h"
 #include <arm_neon.h>
 #include <android/log.h>
 
+#define LANES_INT_NUM 4
+#define LANES_SHORT_NUM 8
+#define LANES_FLOAT_NUM 4
+#define LANES_LONG_NUM 2
 
+#define BLOCK_M 32
+#define BLOCK_N 32
+#define BLOCK_K 32
+
+#define BLOCK_TRANSPOSE 8
+
+/*
+void matrix_int_mul(int* a, int m_a, int n_a, int* b, int m_b, int n_b, int* result) {
+    int i, j ,k, l;
+    int mod4 = n_a%LANES_INT_NUM;
+    for (i = 0; i < m_a; i++) {
+        for (j = 0; j < n_b; j++) {
+            int32x4_t sum_vect = vdupq_n_s32(0);
+            int sum = 0;
+            for (k = 0; k < n_a/LANES_INT_NUM; k++) {
+                int32x4_t a_vec = vld1q_s32(a + i * n_a + k * LANES_INT_NUM);
+                int32x4_t b_vec;
+
+                b_vec = vld1q_lane_s32(b + k * LANES_INT_NUM * n_b + j, b_vec, 0);
+                b_vec = vld1q_lane_s32(b + k * LANES_INT_NUM * n_b + j + n_b, b_vec, 1);
+                b_vec = vld1q_lane_s32(b + k * LANES_INT_NUM * n_b + j + n_b * 2, b_vec, 2);
+                b_vec = vld1q_lane_s32(b + k * LANES_INT_NUM * n_b + j + n_b * 3, b_vec, 3);
+                roid_log_print(ANDROID_LOG_VERBOSE, "paralleM", "%d, %d, %d, %d, %d, %d", i, j, vgetq_lane_s32(tmp_mul, 0), vgetq_lane_s32(tmp_mul, 1), vgetq_lane_s32(tmp_mul, 2), vgetq_lane_s32(tmp_mul, 3));
+                sum_vect = vmlaq_s32(sum_vect, a_vec, b_vec);
+            }
+            sum = vgetq_lane_s32(sum_vect, 0) + vgetq_lane_s32(sum_vect, 1) + vgetq_lane_s32(sum_vect, 2) + vgetq_lane_s32(sum_vect, 3);
+
+            // deal with left over
+            if (k == n_a/LANES_INT_NUM && mod4 != 0) {
+
+                for (k = n_a - mod4; k < n_a; k++) {
+                    sum += a[i * n_a + k] * b[k * n_b + j];
+                }
+            }
+            result[i * n_b + j] = sum;
+        }
+    }
+}
+*/
 
 void matrix_int_mul_block(int* a, int m_a, int n_a, int* b, int m_b, int n_b, int* result) {
 
@@ -111,6 +153,7 @@ void matrix_int_mul_block(int* a, int m_a, int n_a, int* b, int m_b, int n_b, in
                     continue;
                 }
 
+
                 // deanl with j has left over, or ij have left over at same time
                 if (iblock + BLOCK_M > m_a || jblock + BLOCK_N > n_b) {
                     int maxI = iblock + BLOCK_M > m_a ? m_a%BLOCK_M : BLOCK_M;
@@ -159,6 +202,41 @@ void matrix_int_mul_block(int* a, int m_a, int n_a, int* b, int m_b, int n_b, in
 
 }
 
+/*
+void matrix_float_mul(float* a, int m_a, int n_a, float* b, int m_b, int n_b, float* result) {
+    int i, j ,k, l;
+    int mod4 = n_a%LANES_FLOAT_NUM;
+    for (i = 0; i < m_a; i++) {
+        for (j = 0; j < n_b; j++) {
+            float32x4_t sum_vect = vdupq_n_f32(0);
+            float sum = 0;
+            for (k = 0; k < n_a/LANES_FLOAT_NUM; k++) {
+                float32x4_t a_vec = vld1q_f32(a + i * n_a + k * LANES_FLOAT_NUM);
+                float32x4_t b_vec;
+
+                b_vec = vld1q_lane_f32(b + k * LANES_FLOAT_NUM * n_b + j, b_vec, 0);
+                b_vec = vld1q_lane_f32(b + k * LANES_FLOAT_NUM * n_b + j + n_b, b_vec, 1);
+                b_vec = vld1q_lane_f32(b + k * LANES_FLOAT_NUM * n_b + j + n_b * 2, b_vec, 2);
+                b_vec = vld1q_lane_f32(b + k * LANES_FLOAT_NUM * n_b + j + n_b * 3, b_vec, 3);
+                //sum_vect = vaddq_s32(sum_vect, tmp_mul);
+                //__android_log_print(ANDROID_LOG_VERBOSE, "paralleA", "%d, %d, %d, %d, %d, %d", i, j, vgetq_lane_s32(a_vec, 0), vgetq_lane_s32(a_vec, 1), vgetq_lane_s32(a_vec, 2), vgetq_lane_s32(a_vec, 3));
+                //__android_log_print(ANDROID_LOG_VERBOSE, "paralleB", "%d, %d, %d, %d, %d, %d", i, j, vgetq_lane_s32(b_vec, 0), vgetq_lane_s32(b_vec, 1), vgetq_lane_s32(b_vec, 2), vgetq_lane_s32(b_vec, 3));
+                //__android_log_print(ANDROID_LOG_VERBOSE, "paralleM", "%d, %d, %d, %d, %d, %d", i, j, vgetq_lane_s32(tmp_mul, 0), vgetq_lane_s32(tmp_mul, 1), vgetq_lane_s32(tmp_mul, 2), vgetq_lane_s32(tmp_mul, 3));
+                sum_vect = vmlaq_f32(sum_vect, a_vec, b_vec);
+            }
+            sum = vgetq_lane_f32(sum_vect, 0) + vgetq_lane_f32(sum_vect, 1) + vgetq_lane_f32(sum_vect, 2) + vgetq_lane_f32(sum_vect, 3);
+
+            if (k == n_a/LANES_FLOAT_NUM && mod4 != 0) {
+
+                for (k = n_a - mod4; k < n_a; k++) {
+                    sum += a[i * n_a + k] * b[k * n_b + j];
+                }
+            }
+            result[i * n_b + j] = sum;
+        }
+    }
+}
+*/
 
 void matrix_float_mul_block(float* a, int m_a, int n_a, float* b, int m_b, int n_b, float* result) {
 
@@ -308,10 +386,35 @@ void matrix_float_mul_block(float* a, int m_a, int n_a, float* b, int m_b, int n
                     }
                 }
             }
-
 }
 
+void matrix_float_mul_block_v2(float* a, int m_a, int n_a, float* b, int m_b, int n_b, float* result) {
 
+    int i, j ,k, iblock, jblock, kblock;
+    float sum;
+
+    for (iblock = 0; iblock < m_a; iblock += BLOCK_M)
+        for (jblock = 0; jblock < n_b; jblock += BLOCK_N)
+            for (kblock = 0; kblock < n_a; kblock += BLOCK_K) {
+
+                for (i = 0; i < BLOCK_M; i++) {
+                    for (j = 0; j < BLOCK_N; j++) {
+                        float c = result[(i + iblock) * n_b + (j + jblock)];
+
+                        for (k = 0; k < BLOCK_K; k+=LANES_FLOAT_NUM) {
+                            float32x4_t a_vec = vld1q_f32(a + (i + iblock) * n_a + (k + kblock));
+                            float32x4_t b_vec = vld1q_f32(b + (j + jblock) * n_b + (k + kblock));
+                            //sum_vect = vmlaq_f32(sum_vect, a_vec, b_vec);
+                            float32x4_t mul = vmulq_f32(a_vec, b_vec);
+                            c += (vgetq_lane_f32(mul, 0) + vgetq_lane_f32(mul, 1) + vgetq_lane_f32(mul, 2) + vgetq_lane_f32(mul, 3));
+
+                        }
+                        //vst1q_f32(result, mul);
+                        result[(i + iblock) * n_b + (j + jblock)] = c;
+                    }
+                }
+            }
+}
 
 void matrix_short_mul(short* a, int m_a, int n_a, short* b, int m_b, int n_b, short* result) {
     int i, j ,k, l;
@@ -723,6 +826,44 @@ void matrix_transpose_float_neon(float* a, int m_a, int n_a, float* result) {
             vst1q_f32(result + (j + 6) * m_a + i + 4, t6.val[1]);
             vst1q_f32(result + (j + 7) * m_a + i, t7.val[0]);
             vst1q_f32(result + (j + 7) * m_a + i + 4, t7.val[1]);
+        }
+    }
+}
+
+void matrix_int_add(int* a, int m_a, int n_a, int* b, int m_b, int n_b, int* results) {
+    int i, j;
+    for (i = 0; i < m_a; i++) {
+        for (j = 0; j < n_a; j+=4) {
+            if (j + 4 > n_a) {
+                int k, kmax = n_a%4;
+                for (k = 0; k < kmax; k++) {
+                    results[i * n_a + k] = a[i * n_a + k] + b[i * n_a + k];
+                }
+                continue;
+            }
+            int32x4_t a_vec = vld1q_s32(a + i * n_a + j);
+            int32x4_t b_vec = vld1q_s32(b + i * n_a + j);
+            int32x4_t result = vaddq_s32(a_vec, b_vec);
+            vst1q_s32(results + i * n_a + j, result);
+        }
+    }
+}
+
+void matrix_float_add(float* a, int m_a, int n_a, float* b, int m_b, int n_b, float* results) {
+    int i, j;
+    for (i = 0; i < m_a; i++) {
+        for (j = 0; j < n_a; j+=4) {
+            if (j + 4 > n_a) {
+                int k, kmax = n_a%4;
+                for (k = 0; k < kmax; k++) {
+                    results[i * n_a + k] = a[i * n_a + k] + b[i * n_a + k];
+                }
+                continue;
+            }
+            float32x4_t a_vec = vld1q_f32(a + i * n_a + j);
+            float32x4_t b_vec = vld1q_f32(b + i * n_a + j);
+            float32x4_t result = vaddq_f32(a_vec, b_vec);
+            vst1q_f32(results + i * n_a + j, result);
         }
     }
 }

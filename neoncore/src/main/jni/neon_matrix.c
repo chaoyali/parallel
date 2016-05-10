@@ -13,15 +13,35 @@
 #include <android/log.h>
 
 // block size for sequential multiply
-#define BLOCK_M 4
-#define BLOCK_N 4
-#define BLOCK_K 4
+#define BLOCK_M 32
+#define BLOCK_N 32
+#define BLOCK_K 32
+
+/** mul int naive intrinsics **/
+/*
+JNIEXPORT void JNICALL
+Java_com_example_neon_NeonWrapper_matrix_1int_1mul_1intrin(JNIEnv *env, jobject instance, jintArray a_,
+                                                jint m_a, jint n_a, jintArray b_, jint m_b, jint n_b,
+                                                jintArray result_) {
+    #ifdef HAVE_NEON
+    jint *a = (*env)->GetIntArrayElements(env, a_, NULL);
+    jint *b = (*env)->GetIntArrayElements(env, b_, NULL);
+    jint *result = (*env)->GetIntArrayElements(env, result_, NULL);
+
+    matrix_int_mul(a, m_a, n_a, b, m_b, n_b, result);
+
+    (*env)->ReleaseIntArrayElements(env, a_, a, 0);
+    (*env)->ReleaseIntArrayElements(env, b_, b, 0);
+    (*env)->ReleaseIntArrayElements(env, result_, result, 0);
+#endif
+}
+*/
 
 /** mul int naive sequential **/
 JNIEXPORT void JNICALL
-Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1int_1mul_1sequential(JNIEnv *env, jobject instance, jintArray a_,
-                                                                       jint m_a, jint n_a, jintArray b_, jint m_b, jint n_b,
-                                                                       jintArray result_) {
+Java_com_example_neon_NeonWrapper_matrix_1int_1mul_1sequential(JNIEnv *env, jobject instance, jintArray a_,
+                                                               jint m_a, jint n_a, jintArray b_, jint m_b, jint n_b,
+                                                               jintArray result_) {
 #ifdef HAVE_NEON
     jint *a = (*env)->GetIntArrayElements(env, a_, NULL);
     jint *b = (*env)->GetIntArrayElements(env, b_, NULL);
@@ -50,9 +70,9 @@ Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1int_1mul_1sequential(JNIEnv *e
 
 /** mul int block sequential **/
 JNIEXPORT void JNICALL
-Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1int_1mul_1block_1sequential(JNIEnv *env, jobject instance, jintArray a_,
-                                                                              jint m_a, jint n_a, jintArray b_, jint m_b, jint n_b,
-                                                                              jintArray result_) {
+Java_com_example_neon_NeonWrapper_matrix_1int_1mul_1block_1sequential(JNIEnv *env, jobject instance, jintArray a_,
+                                                                      jint m_a, jint n_a, jintArray b_, jint m_b, jint n_b,
+                                                                      jintArray result_) {
 #ifdef HAVE_NEON
     jint *a = (*env)->GetIntArrayElements(env, a_, NULL);
     jint *b = (*env)->GetIntArrayElements(env, b_, NULL);
@@ -91,9 +111,9 @@ Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1int_1mul_1block_1sequential(JN
 
 /** mul int block intrinsics **/
 JNIEXPORT void JNICALL
-Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1int_1mul_1block_1intrin1(JNIEnv *env, jobject instance, jintArray a_,
-                                                                           jint m_a, jint n_a, jintArray b_, jint m_b, jint n_b,
-                                                                           jintArray result_) {
+Java_com_example_neon_NeonWrapper_matrix_1int_1mul_1block_1intrin1(JNIEnv *env, jobject instance, jintArray a_,
+                                                                   jint m_a, jint n_a, jintArray b_, jint m_b, jint n_b,
+                                                                   jintArray result_) {
 #ifdef HAVE_NEON
     jint *a = (*env)->GetIntArrayElements(env, a_, NULL);
     jint *b = (*env)->GetIntArrayElements(env, b_, NULL);
@@ -110,7 +130,7 @@ Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1int_1mul_1block_1intrin1(JNIEn
 /** mul float naive intrinsics**/
 /*
 JNIEXPORT void JNICALL
- Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1float_1mul_1intrin(JNIEnv *env, jobject instance, jfloatArray a_,
+ Java_com_example_neon_NeonWrapper_matrix_1float_1mul_1intrin(JNIEnv *env, jobject instance, jfloatArray a_,
                                                 jint m_a, jint n_a, jfloatArray b_, jint m_b, jint n_b,
                                                 jfloatArray result_) {
  #ifdef HAVE_NEON
@@ -129,9 +149,9 @@ JNIEXPORT void JNICALL
 
 /** mul float naive sequential**/
 JNIEXPORT void JNICALL
-Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1float_1mul_1sequential(JNIEnv *env, jobject instance, jfloatArray a_,
-                                                                         jint m_a, jint n_a, jfloatArray b_, jint m_b, jint n_b,
-                                                                         jfloatArray result_) {
+Java_com_example_neon_NeonWrapper_matrix_1float_1mul_1sequential(JNIEnv *env, jobject instance, jfloatArray a_,
+                                                                 jint m_a, jint n_a, jfloatArray b_, jint m_b, jint n_b,
+                                                                 jfloatArray result_) {
 #ifdef HAVE_NEON
     jfloat *a = (*env)->GetFloatArrayElements(env, a_, NULL);
     jfloat *b = (*env)->GetFloatArrayElements(env, b_, NULL);
@@ -162,9 +182,9 @@ Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1float_1mul_1sequential(JNIEnv 
 
 /** mul float block sequential **/
 JNIEXPORT void JNICALL
-Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1float_1mul_1block_1sequential(JNIEnv *env, jobject instance, jfloatArray a_,
-                                                                                jint m_a, jint n_a, jfloatArray b_, jint m_b, jint n_b,
-                                                                                jfloatArray result_) {
+Java_com_example_neon_NeonWrapper_matrix_1float_1mul_1block_1sequential(JNIEnv *env, jobject instance, jfloatArray a_,
+                                                                        jint m_a, jint n_a, jfloatArray b_, jint m_b, jint n_b,
+                                                                        jfloatArray result_) {
 #ifdef HAVE_NEON
     jfloat *a = (*env)->GetFloatArrayElements(env, a_, NULL);
     jfloat *b = (*env)->GetFloatArrayElements(env, b_, NULL);
@@ -205,9 +225,9 @@ Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1float_1mul_1block_1sequential(
 
 /** mul float block intrinsics **/
 JNIEXPORT void JNICALL
-Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1float_1mul_1block_1intrin1(JNIEnv *env, jobject instance, jfloatArray a_,
-                                                                             jint m_a, jint n_a, jfloatArray b_, jint m_b, jint n_b,
-                                                                             jfloatArray result_) {
+Java_com_example_neon_NeonWrapper_matrix_1float_1mul_1block_1intrin1(JNIEnv *env, jobject instance, jfloatArray a_,
+                                                                     jint m_a, jint n_a, jfloatArray b_, jint m_b, jint n_b,
+                                                                     jfloatArray result_) {
 #ifdef HAVE_NEON
     jfloat *a = (*env)->GetFloatArrayElements(env, a_, NULL);
     jfloat *b = (*env)->GetFloatArrayElements(env, b_, NULL);
@@ -221,11 +241,29 @@ Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1float_1mul_1block_1intrin1(JNI
 #endif
 }
 
+/** mul float block intrinsics **/
+JNIEXPORT void JNICALL
+Java_com_example_neon_NeonWrapper_matrix_1float_1mul_1block_1intrin2(JNIEnv *env, jobject instance, jfloatArray a_,
+                                                                     jint m_a, jint n_a, jfloatArray b_, jint m_b, jint n_b,
+                                                                     jfloatArray result_) {
+#ifdef HAVE_NEON
+    jfloat *a = (*env)->GetFloatArrayElements(env, a_, NULL);
+    jfloat *b = (*env)->GetFloatArrayElements(env, b_, NULL);
+    jfloat *result = (*env)->GetFloatArrayElements(env, result_, NULL);
+
+    matrix_float_mul_block_v2(a, m_a, n_a, b, m_b, n_b, result);
+
+    (*env)->ReleaseFloatArrayElements(env, a_, a, 0);
+    (*env)->ReleaseFloatArrayElements(env, b_, b, 0);
+    (*env)->ReleaseFloatArrayElements(env, result_, result, 0);
+#endif
+}
+
 /** mul short naive intrinsics**/
 JNIEXPORT void JNICALL
-Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1short_1mul_1intrin(JNIEnv *env, jobject instance, jshortArray a_,
-                                                                     jint m_a, jint n_a, jshortArray b_, jint m_b, jint n_b,
-                                                                     jshortArray result_) {
+Java_com_example_neon_NeonWrapper_matrix_1short_1mul_1intrin(JNIEnv *env, jobject instance, jshortArray a_,
+                                                             jint m_a, jint n_a, jshortArray b_, jint m_b, jint n_b,
+                                                             jshortArray result_) {
 #ifdef HAVE_NEON
     jshort *a = (*env)->GetShortArrayElements(env, a_, NULL);
     jshort *b = (*env)->GetShortArrayElements(env, b_, NULL);
@@ -241,9 +279,9 @@ Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1short_1mul_1intrin(JNIEnv *env
 
 /** mul float naive sequential**/
 JNIEXPORT void JNICALL
-Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1short_1mul_1sequential(JNIEnv *env, jobject instance, jshortArray a_,
-                                                                         jint m_a, jint n_a, jshortArray b_, jint m_b, jint n_b,
-                                                                         jshortArray result_) {
+Java_com_example_neon_NeonWrapper_matrix_1short_1mul_1sequential(JNIEnv *env, jobject instance, jshortArray a_,
+                                                                 jint m_a, jint n_a, jshortArray b_, jint m_b, jint n_b,
+                                                                 jshortArray result_) {
 #ifdef HAVE_NEON
     jshort *a = (*env)->GetShortArrayElements(env, a_, NULL);
     jshort *b = (*env)->GetShortArrayElements(env, b_, NULL);
@@ -275,8 +313,8 @@ Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1short_1mul_1sequential(JNIEnv 
 
 /** transpose int intrinsic**/
 JNIEXPORT void JNICALL
-Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1int_1transpose_1intrin(JNIEnv *env, jobject instance, jintArray a_,
-                                                                         jint m_a, jint n_a, jintArray result_) {
+Java_com_example_neon_NeonWrapper_matrix_1int_1transpose_1intrin(JNIEnv *env, jobject instance, jintArray a_,
+                                                                 jint m_a, jint n_a, jintArray result_) {
 #ifdef HAVE_NEON
     jint *a = (*env)->GetIntArrayElements(env, a_, NULL);
     jint *result = (*env)->GetIntArrayElements(env, result_, NULL);
@@ -290,8 +328,8 @@ Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1int_1transpose_1intrin(JNIEnv 
 
 /** transpose int sequential**/
 JNIEXPORT void JNICALL
-Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1int_1transpose_1sequential(JNIEnv *env, jobject instance, jintArray a_,
-                                                                             jint m_a, jint n_a, jintArray result_) {
+Java_com_example_neon_NeonWrapper_matrix_1int_1transpose_1sequential(JNIEnv *env, jobject instance, jintArray a_,
+                                                                     jint m_a, jint n_a, jintArray result_) {
 #ifdef HAVE_NEON
     jint *a = (*env)->GetIntArrayElements(env, a_, NULL);
     jint *result = (*env)->GetIntArrayElements(env, result_, NULL);
@@ -310,8 +348,8 @@ Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1int_1transpose_1sequential(JNI
 
 /** transpose float intrinsic**/
 JNIEXPORT void JNICALL
-Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1float_1transpose_1intrin(JNIEnv *env, jobject instance, jfloatArray a_,
-                                                                           jint m_a, jint n_a, jfloatArray result_) {
+Java_com_example_neon_NeonWrapper_matrix_1float_1transpose_1intrin(JNIEnv *env, jobject instance, jfloatArray a_,
+                                                                   jint m_a, jint n_a, jfloatArray result_) {
 #ifdef HAVE_NEON
     jfloat *a = (*env)->GetFloatArrayElements(env, a_, NULL);
     jfloat *result = (*env)->GetFloatArrayElements(env, result_, NULL);
@@ -325,8 +363,8 @@ Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1float_1transpose_1intrin(JNIEn
 
 /** transpose float sequential**/
 JNIEXPORT void JNICALL
-Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1float_1transpose_1sequential(JNIEnv *env, jobject instance, jfloatArray a_,
-                                                                               jint m_a, jint n_a, jfloatArray result_) {
+Java_com_example_neon_NeonWrapper_matrix_1float_1transpose_1sequential(JNIEnv *env, jobject instance, jfloatArray a_,
+                                                                       jint m_a, jint n_a, jfloatArray result_) {
 #ifdef HAVE_NEON
     jfloat *a = (*env)->GetFloatArrayElements(env, a_, NULL);
     jfloat *result = (*env)->GetFloatArrayElements(env, result_, NULL);
@@ -339,6 +377,42 @@ Java_fastandroid_neoncore_matrix_FaMatrix_matrix_1float_1transpose_1sequential(J
     }
 
     (*env)->ReleaseFloatArrayElements(env, a_, a, 0);
+    (*env)->ReleaseFloatArrayElements(env, result_, result, 0);
+#endif
+}
+
+/** mul int block intrinsics **/
+JNIEXPORT void JNICALL
+Java_com_example_neon_NeonWrapper_matrix_1int_1add_1intrin(JNIEnv *env, jobject instance, jintArray a_,
+                                                           jint m_a, jint n_a, jintArray b_, jint m_b, jint n_b,
+                                                           jintArray result_) {
+#ifdef HAVE_NEON
+    jint *a = (*env)->GetIntArrayElements(env, a_, NULL);
+    jint *b = (*env)->GetIntArrayElements(env, b_, NULL);
+    jint *result = (*env)->GetIntArrayElements(env, result_, NULL);
+
+    matrix_int_add(a, m_a, n_a, b, m_b, n_b, result);
+
+    (*env)->ReleaseIntArrayElements(env, a_, a, 0);
+    (*env)->ReleaseIntArrayElements(env, b_, b, 0);
+    (*env)->ReleaseIntArrayElements(env, result_, result, 0);
+#endif
+}
+
+/** mul float block intrinsics **/
+JNIEXPORT void JNICALL
+Java_com_example_neon_NeonWrapper_matrix_1float_1add_1intrin(JNIEnv *env, jobject instance, jfloatArray a_,
+                                                             jint m_a, jint n_a, jfloatArray b_, jint m_b, jint n_b,
+                                                             jfloatArray result_) {
+#ifdef HAVE_NEON
+    jfloat *a = (*env)->GetFloatArrayElements(env, a_, NULL);
+    jfloat *b = (*env)->GetFloatArrayElements(env, b_, NULL);
+    jfloat *result = (*env)->GetFloatArrayElements(env, result_, NULL);
+
+    matrix_float_add(a, m_a, n_a, b, m_b, n_b, result);
+
+    (*env)->ReleaseFloatArrayElements(env, a_, a, 0);
+    (*env)->ReleaseFloatArrayElements(env, b_, b, 0);
     (*env)->ReleaseFloatArrayElements(env, result_, result, 0);
 #endif
 }

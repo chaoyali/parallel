@@ -10,6 +10,11 @@ import fastandroid.neoncore.matrix.Util.MatrixLong;
  */
 public class FaMatrix {
 
+    //addition
+    private static native void matrix_int_add_intrin(int[] a, int m_a, int n_a, int[] b, int m_b, int n_b, int[] result);
+    private static native void matrix_float_add_intrin(float[] a, int m_a, int n_a, float[] b, int m_b, int n_b, float[] result);
+
+
     // multiply
     private static native void matrix_int_mul_sequential(int[] a, int m_a, int n_a, int[] b, int m_b, int n_b, int[] result);
     //private static native void matrix_int_mul_intrin(int[] a, int m_a, int n_a, int[] b, int m_b, int n_b, int[] result);
@@ -20,6 +25,7 @@ public class FaMatrix {
     private static native void matrix_float_mul_sequential(float[] a, int m_a, int n_a, float[] b, int m_b, int n_b, float[] result);
     private static native void matrix_float_mul_block_sequential(float[] a, int m_a, int n_a, float[] b, int m_b, int n_b, float[] result);
     private static native void matrix_float_mul_block_intrin1(float[] a, int m_a, int n_a, float[] b, int m_b, int n_b, float[] result);
+    private static native void matrix_float_mul_block_intrin2(float[] a, int m_a, int n_a, float[] b, int m_b, int n_b, float[] result);
 
 
     private static native void matrix_short_mul_intrin(short[] a, int m_a, int n_a, short[] b, int m_b, int n_b, short[] result);
@@ -152,6 +158,70 @@ public class FaMatrix {
         result.setN(b.getN());
     }
 
+    public static void matrix_mul_float(MatrixFloat a, MatrixFloat b, MatrixFloat result) {
+        // check format
+        if (a.getN() != b.getM()) {
+            System.err.println("Error. These two MatrixInt cannot be multiplied.");
+            return;
+        }
+        if (a.getM() < 1 || a.getN() < 1 || b.getM() < 1 || b.getN() < 1) {
+            System.err.println("Error. Size error.");
+            return;
+        }
+
+        if (a.getData() == null || b.getData() == null) {
+            System.err.println("Error. Access Null Matrix.");
+            return;
+        }
+
+        if (result.getData() == null) {
+            result.setData(new float[a.getM()*b.getN()]);
+            return;
+        }
+
+        if (result.getData().length != result.getM()*result.getN()) {
+            System.err.println("Error. Wrong Parameters");
+            return;
+        }
+
+        matrix_float_mul_block_intrin1(a.getData(), a.getM(), a.getN(), b.getData(), b.getM(), b.getN(), result.getData());
+
+        result.setM(a.getM());
+        result.setN(b.getN());
+    }
+
+    public static void matrix_mul_float_v2(MatrixFloat a, MatrixFloat b, MatrixFloat result) {
+        // check format
+        if (a.getN() != b.getM()) {
+            System.err.println("Error. These two MatrixInt cannot be multiplied.");
+        }
+        if (a.getM() < 1 || a.getN() < 1 || b.getM() < 1 || b.getN() < 1) {
+            System.err.println("Error. Size error.");
+        }
+
+        //MatrixFloat bt = new MatrixFloat();
+        float[] bt = new float[b.getM() * b.getN()];
+//        matrix_float_transpose_sequential(b.getData(), b.getM(), b.getN(), bt.getData());
+//        bt.setM(a.getN());
+//        bt.setN(a.getM());
+
+        if (b.getM() <= 8 || b.getN() <= 8) {
+            matrix_float_transpose_sequential(b.getData(), b.getM(), b.getN(), bt);
+        }
+        else {
+            matrix_float_transpose_intrin(b.getData(), b.getM(), b.getN(), bt);
+        }
+
+//        bt.setM(a.getN());
+//        bt.setN(a.getM());
+
+
+        matrix_float_mul_block_intrin2(a.getData(), a.getM(), a.getN(), bt, b.getN(), b.getM(), result.getData());
+
+        result.setM(a.getM());
+        result.setN(b.getN());
+    }
+
     public static void matrix_mul_float_seq(MatrixFloat a, MatrixFloat b, MatrixFloat result) {
         // check format
         if (a.getN() != b.getM()) {
@@ -162,21 +232,6 @@ public class FaMatrix {
         }
 
         matrix_float_mul_sequential(a.getData(), a.getM(), a.getN(), b.getData(), b.getM(), b.getN(), result.getData());
-
-        result.setM(a.getM());
-        result.setN(b.getN());
-    }
-
-    public static void matrix_mul_float(MatrixFloat a, MatrixFloat b, MatrixFloat result) {
-        // check format
-        if (a.getN() != b.getM()) {
-            System.err.println("Error. These two MatrixInt cannot be multiplied.");
-        }
-        if (a.getM() < 1 || a.getN() < 1 || b.getM() < 1 || b.getN() < 1) {
-            System.err.println("Error. Size error.");
-        }
-
-        matrix_float_mul_block_intrin1(a.getData(), a.getM(), a.getN(), b.getData(), b.getM(), b.getN(), result.getData());
 
         result.setM(a.getM());
         result.setN(b.getN());
@@ -249,12 +304,23 @@ public class FaMatrix {
             System.err.println("Error. Size error.");
         }
 
-        if (a.getM() < 8 || a.getN() < 8) {
+        if (a.getM() <= 8 || a.getN() <= 8) {
             matrix_float_transpose_sequential(a.getData(), a.getM(), a.getN(), result.getData());
         }
         else {
             matrix_float_transpose_intrin(a.getData(), a.getM(), a.getN(), result.getData());
         }
+
+        result.setM(a.getN());
+        result.setN(a.getM());
+    }
+
+    public static void matrix_transpose_float_seq(MatrixFloat a, MatrixFloat result) {
+        if (a.getM() < 1 || a.getN() < 1) {
+            System.err.println("Error. Size error.");
+        }
+
+        matrix_float_transpose_sequential(a.getData(), a.getM(), a.getN(), result.getData());
 
         result.setM(a.getN());
         result.setN(a.getM());
@@ -281,6 +347,15 @@ public class FaMatrix {
         System.out.println("sequential: " + (millis1 - millis));
         System.out.println("neon      : " + (millis2 - millis1));
     }
+
+    public static void matrix_add_int(MatrixInt a, MatrixInt b, MatrixInt result) {
+        matrix_int_add_intrin(a.getData(), a.getM(), a.getN(), b.getData(), b.getM(), b.getN(), result.getData());
+    }
+
+    public static void matrix_add_float(MatrixFloat a, MatrixFloat b, MatrixFloat result) {
+        matrix_float_add_intrin(a.getData(), a.getM(), a.getN(), b.getData(), b.getM(), b.getN(), result.getData());
+    }
+
 
 
     static {
