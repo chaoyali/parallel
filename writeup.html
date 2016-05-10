@@ -57,7 +57,7 @@
 
     <h3>Approach</h3>
 
-	We implementation our algorithm based on c language and NEON instructions.
+	We implementation our algorithm based on C language and NEON instructions.
     <h4>Matrix Transpose</h4>
     <p>
         Neon lanes can be used to improve the cache performance of matrix transpose operation. For naive version matrix operation, we can simply use result[j][i] = matrix[i][j] to achieve our goal. But since we take big steps when storing result, the cache will alway miss. To improve the cache hit rate, we use the following algorithm to calculate matrix transpose operation using Neon.
@@ -411,7 +411,7 @@ for (iblock = 0; iblock &lt; m_a; iblock += BLOCK_M)
     <br>
     <br>For FaCollection library, we test three tools separately. 
     <br>
-    <br>At first, we test the vector operation using Samsung i9300. We can get about 2.2x speedup than same code in serial c version. The speedup stay stable with the num_var (the number of parameters) and the len_vec (length of vector). In this implementation, we only load each elements once (except the overlap with leftover), so the speedup (compared to C code) of this implementation should be the baseline of our other implementation for other algorithms with same algorithm. 
+    <br>At first, we test the vector operation using Samsung i9300. We can get about 2.2x speedup than same code in serial C version. The speedup stay stable with the num_var (the number of parameters) and the len_vec (length of vector). In this implementation, we only load each elements once (except the overlap with leftover), so the speedup (compared to C code) of this implementation should be the baseline of our other implementation for other algorithms with same algorithm. 
     <br>
     <br>We test AA sort in Nexus 4. We compared it with the combine sort in  C and official qsort in C. We got the average run time of different algorithm is shown in Pic 4.3. It can run 2.2x faster than serial version of combsort in c and 1.2x faster than quicksort. To make the figure more clear, I do not put the test of java version on the figure, and it can run about 6x faster than the Arrays.sort() in Java under my package.
     <br><br>
@@ -426,7 +426,7 @@ for (iblock = 0; iblock &lt; m_a; iblock += BLOCK_M)
 	<br>
 	<br>Comparing to quicksort, we works pretty good and can beat quicksort a little. However, the performance of NEON version code can be seriously affected by hardware, with better vector operator, our codes should work better.
 	<br>
-	<br>We test FFT in Nexus 4 ,too. The average run time of FFT shown in Pic 4.4. We compare the runtime of java version, c version and neon version with different length of signals. For both of the C version and java version, we also use the our implementation of FFT because it works better with the better locality. The answer shows that our neon version can run 3x faster than java version and run 1.3 faster than serial c version.
+	<br>We test FFT in Nexus 4 ,too. The average run time of FFT shown in Pic 4.4. We compare the runtime of java version, C version and neon version with different length of signals. For both of the C version and java version, we also use the our implementation of FFT because it works better with the better locality. The answer shows that our neon version can run 3x faster than java version and run 1.3 faster than serial C version.
     <br><br>
     <img src="images/pic44.jpg" style="width:500px;
       display: block;
